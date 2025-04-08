@@ -98,45 +98,111 @@ document.addEventListener("mouseup", (event) => {
     }
 });
 
-// Función para aplicar los estilos al texto seleccionado
 function aplicarEstilo(estilo, range, valor = null) {
     if (!range) return;
 
-    const selectedContent = range.extractContents();
+    let selectedContent = range.extractContents();
+    let parentElement = range.commonAncestorContainer.parentElement;
+    
+    // Buscar el span modificado más cercano en la selección
+    let existingSpan = parentElement.closest(".modificado");
 
-    let span;
-    span = document.createElement("span");
+    if (!existingSpan) {
+        // Si no hay un span existente, creamos uno nuevo
+        existingSpan = document.createElement("span");
+        existingSpan.classList.add("modificado");
+        range.insertNode(existingSpan);
+    }
+
+    // Aplicar los estilos nuevos o modificar los existentes
     switch (estilo) {
         case "bold":
-            span.style.fontWeight = span.style.fontWeight === "bold" ? "normal" : "bold";
+            existingSpan.style.fontWeight = existingSpan.style.fontWeight === "bold" ? "normal" : "bold";
             break;
         case "italic":
-            span.style.fontStyle = span.style.fontStyle === "italic" ? "normal" : "italic";
+            existingSpan.style.fontStyle = existingSpan.style.fontStyle === "italic" ? "normal" : "italic";
             break;
         case "underline":
-            span.style.textDecoration = span.style.textDecoration.includes("underline") ? "none" : "underline";
+            existingSpan.style.textDecoration = existingSpan.style.textDecoration.includes("underline") ? "none" : "underline";
             break;
         case "color":
-            span.style.color = valor;
+            existingSpan.style.color = valor;
             break;
         case "backgroundColor":
-            span.style.backgroundColor = valor;
+            existingSpan.style.backgroundColor = valor;
             break;
         case "fontSize":
-            span.style.fontSize = valor;
+            existingSpan.style.fontSize = valor;
             break;
     }
 
-    span.appendChild(selectedContent);
-    range.insertNode(span);
+    // Añadir el contenido seleccionado al span existente
+    existingSpan.appendChild(selectedContent);
+    
+    // Limpiar la selección
     window.getSelection().removeAllRanges();
 }
+
+
 
 // Convertir color RGB a HEX
 function rgbToHex(rgb) {
     const match = rgb.match(/\d+/g);
     if (!match) return "#000000";
     return `#${match.slice(0, 3).map(x => parseInt(x).toString(16).padStart(2, "0")).join("")}`;
+}
+
+document.addEventListener("mouseover", (event) => {
+    if (event.target.classList.contains("modificado")) {
+        // Si no tiene backgroundColor definido, se le asigna uno
+        if (!event.target.style.backgroundColor) {
+            event.target.dataset.originalColor = event.target.style.backgroundColor;
+            event.target.style.backgroundColor = "#ffff99";
+        }
+        else
+            event.target.dataset.originalColor = event.target.style.backgroundColor;
+        event.target.style.backgroundColor = darkenColor(event.target.dataset.originalColor);
+    }
+});
+
+document.addEventListener("mouseout", (event) => {
+    if (event.target.classList.contains("modificado")) {
+        event.target.style.backgroundColor = event.target.dataset.originalColor;
+    }
+});
+
+
+document.addEventListener("click", (event) => {
+    const modificadoElement = event.target.closest(".modificado");
+
+    if (modificadoElement) {
+        // Eliminar todos los botones de eliminación existentes en otros elementos
+        document.querySelectorAll(".delete-modification").forEach(button => button.remove());
+
+    
+        const deleteButton = document.createElement("button");
+        deleteButton.innerText = "❌";
+        deleteButton.classList.add("delete-modification");
+        deleteButton.addEventListener("click", (e) => {
+            event.target.replaceWith(...event.target.childNodes);
+
+            modificadoElement.querySelectorAll("span.modificado").forEach(span => {
+                span.replaceWith(...span.childNodes);
+            });
+
+            deleteButton.remove();
+        });
+
+        modificadoElement.appendChild(deleteButton);
+        
+    }
+});
+
+function darkenColor(color) {
+    if (!color || color === "transparent") return "#dddddd";
+    const match = color.match(/\d+/g);
+    if (!match) return "#dddddd";
+    return `rgb(${match.slice(0, 3).map(x => Math.max(0, parseInt(x) - 40)).join(",")})`;
 }
 
 // Estilos CSS
@@ -163,6 +229,24 @@ style.innerHTML = `
         height: 24px;
         border: 1px solid #000;
         background-color: #fff;
+    }
+
+    .modificado {
+        position: relative;
+        display: inline-block;
+    }
+    .delete-modification {
+        position: absolute;
+        top: -5px;
+        right: -10px;
+        background: red;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+        cursor: pointer;
     }
 `;
 document.head.appendChild(style);
