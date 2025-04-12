@@ -16,3 +16,6 @@ static/
 
 # Ignore environment files (e.g. .env or .env.local)
 .env*
+
+migrations/
+django/

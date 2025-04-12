@@ -20,18 +20,17 @@ class ElementoSerializer(serializers.ModelSerializer):
 class InteraccionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Interaccion
-        fields = [
-            'id', 'entidad', 'privado', 'numero_interacciones',
-            'numero_usuarios_visualizan', 'numero_usuarios_editan',
-            'usuarios_realizan', 'usuarios_visualizan'
-        ]
-        read_only_fields = ['usuarios_realizan', 'usuarios_visualizan']
+        fields = '__all__'
+        read_only_fields = ['usuarios_realizan', 'usuarios_visualizan', 'owner']
 
 
 class InteraccionCompartidaSerializer(serializers.ModelSerializer):
+    interaccion = serializers.PrimaryKeyRelatedField(queryset=Interaccion.objects.all())
+    creador = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
     class Meta:
         model = InteraccionCompartida
-        fields = ['id', 'interaccion', 'creador', 'compartido_con', 'permiso']
+        fields = '__all__'
         read_only_fields = ['creador']
 
 

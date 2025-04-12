@@ -3,12 +3,14 @@ from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from django_filters.rest_framework import DjangoFilterBackend
 from .models import Entidad, Interaccion, InteraccionCompartida, Modificacion, Elemento
 from .serializers import (
     EntidadSerializer, InteraccionSerializer, InteraccionCompartidaSerializer, ModificacionSerializer, 
     ElementoSerializer, TextoSerializer, ModificacionCreateSerializer
 )
+from interaction.filters import InteraccionFilter
 
 # 1. Obtener o crear una entidad desde su URL
 class ObtenerCrearEntidadView(APIView):
@@ -37,6 +39,7 @@ class CrearInteraccionView(APIView):
 
         if serializer.is_valid():
             interaccion = serializer.save()
+            interaccion = serializer.save(owner=request.user)
             interaccion.usuarios_realizan.add(request.user)
             interaccion.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -49,36 +52,68 @@ class CompartirInteraccionView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
-        data = request.data.copy()
-        data['creador'] = request.user.id  # Se establece automáticamente
+        # Obtener los campos involucrados
+        creador = request.user
+        compartido_con = request.data.get('compartido_con')
+        permiso = request.data.get('permiso')
 
-        serializer = InteraccionCompartidaSerializer(data=data)
+        interaccion = Interaccion.objects.get(id=request.data.get('interaccion'))
+
+        if interaccion.owner != creador:
+            return Response({"error": "Solo el creador puede compartir esta interacción."},
+                status=status.HTTP_403_FORBIDDEN)
+
+
+        serializer = InteraccionCompartidaSerializer(data=request.data, context={'request': request})
+
         if serializer.is_valid():
-            interaccion = serializer.validated_data['interaccion']
-
-            # Verificamos si el usuario actual es el creador de la interacción
-            if not InteraccionCompartida.objects.filter(interaccion=interaccion, creador=request.user).exists() and \
-               interaccion.entidad.usuario != request.user:  # O si el usuario es dueño de la entidad
-                return Response({"error": "Solo el creador puede compartir esta interacción."},
-                                status=status.HTTP_403_FORBIDDEN)
-
-            # Guardamos el registro de la compartición
-            interaccion_compartida = serializer.save()
-
-            # Añadimos el usuario compartido a los permisos correspondientes
-            usuario_destino = interaccion_compartida.compartido_con
-            permiso = interaccion_compartida.permiso
-
-            if permiso == 'realiza':
-                interaccion.usuarios_realizan.add(usuario_destino)
-            elif permiso == 'visualiza':
-                interaccion.usuarios_visualizan.add(usuario_destino)
+            # Actualizamos los campos de la interacción según el permiso
+            if permiso == 'editar':
+                interaccion.usuarios_realizan.add(compartido_con)
+            elif permiso == 'visualizar':
+                interaccion.usuarios_visualizan.add(compartido_con)
 
             interaccion.save()
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        else:
 
+            # Verificar si ya existe una compartición
+            existing_comparticion = InteraccionCompartida.objects.filter(
+                interaccion=interaccion,
+                creador=creador,
+                compartido_con=compartido_con
+            ).first()
+
+            # Si ya existe, verificamos si el permiso ha cambiado
+            old_permiso = existing_comparticion.permiso
+
+            if old_permiso != permiso:
+                # Si el permiso ha cambiado, actualizamos el permiso
+                existing_comparticion.permiso = permiso
+                existing_comparticion.save()
+
+                # Actualizamos los campos de la interacción según el nuevo permiso
+                if old_permiso == 'editar':
+                    interaccion.usuarios_realizan.remove(compartido_con)
+                elif old_permiso == 'visualizar':
+                    interaccion.usuarios_visualizan.remove(compartido_con)
+
+                if permiso == 'editar':
+                    interaccion.usuarios_realizan.add(compartido_con)
+                elif permiso == 'visualizar':
+                    interaccion.usuarios_visualizan.add(compartido_con)
+
+                interaccion.save()
+
+            return Response(InteraccionCompartidaSerializer(existing_comparticion).data, status=status.HTTP_200_OK)
+
+            
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 
 
 
@@ -344,3 +379,16 @@ class ModificacionesPorInteraccionView(APIView):
         modificaciones = Modificacion.objects.filter(interaccion_id=interaccion_id).select_related('recurso')
         serializer = ModificacionDetailSerializer(modificaciones, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+class BuscarInteraccionesView(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request):
+        filterset = InteraccionFilter(request.GET, queryset=Interaccion.objects.filter(privado=False))
+        if not filterset.is_valid():
+            return Response(filterset.errors, status=400)
+
+        queryset = filterset.qs
+        serializer = InteraccionSerializer(queryset, many=True)
+        return Response(serializer.data)

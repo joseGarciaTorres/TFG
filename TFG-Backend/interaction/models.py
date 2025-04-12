@@ -22,6 +22,7 @@ class Elemento(models.Model):
 
 class Interaccion(models.Model):
     entidad = models.ForeignKey(Entidad, on_delete=models.CASCADE, related_name='interacciones')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='interacciones_creadas', null=True)
     privado = models.BooleanField(default=False)
     numero_interacciones = models.PositiveIntegerField(default=0)
     numero_usuarios_visualizan = models.PositiveIntegerField(default=0)
