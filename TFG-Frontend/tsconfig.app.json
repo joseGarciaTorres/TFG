@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2020",                    // Especificamos un target de ES2020 para usar características modernas de JS
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],  // Incluir las librerías necesarias para trabajar con DOM y características modernas
+    "module": "ESNext",                     // Usamos ESNext para soporte de módulos modernos
+    "skipLibCheck": true,                   // Evita que TypeScript valide las librerías de node_modules
+    "moduleResolution": "bundler",          // Usa el modo de resolución de módulos como un bundler
+    "allowImportingTsExtensions": true,     // Permite importar archivos .ts explícitamente
+    "isolatedModules": true,                // Asegura que cada archivo sea tratado como un módulo independiente
+    "moduleDetection": "force",             // Fuerza la detección de módulos
+    "noEmit": true,                         // No emitimos salida, ya que Webpack se encargará de compilar
+    "jsx": "react-jsx",                    // Usamos la nueva sintaxis JSX para React 17+
+    
+    /* Configuraciones de Linting */
+    "strict": true,                         // Habilita la comprobación estricta de tipos
+    "noUnusedLocals": true,                 // Previene variables no utilizadas
+    "noUnusedParameters": true,             // Previene parámetros no utilizados
+    "noFallthroughCasesInSwitch": true,     // Previene errores de casos sin break en switch
+    "noUncheckedSideEffectImports": true    // Asegura que no haya importaciones con efectos secundarios no controlados
+  },
+  "include": ["src/**/*"],                  // Incluye todos los archivos bajo la carpeta src
+  "exclude": ["node_modules"]               // Excluye la carpeta node_modules
+}

@@ -41,10 +41,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'django_filters',
-    "corsheaders",
+    'corsheaders',
     'account',
     'interaction',
     'foro',
+    'modification',
 ]
 
 MIDDLEWARE = [
@@ -57,6 +58,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
 
 ROOT_URLCONF = 'BackTFG.urls'
 

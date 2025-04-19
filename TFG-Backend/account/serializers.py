@@ -35,7 +35,7 @@ class UserLoginSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
   class Meta:
     model = User
-    fields = ['id', 'email', 'name', 'first_name', 'last_name', 'profile_image']
+    fields = ['id', 'email', 'name', 'first_name', 'last_name', 'profile_image', 'friends']
 
 class UserSearchSerializer(serializers.ModelSerializer):
   class Meta:

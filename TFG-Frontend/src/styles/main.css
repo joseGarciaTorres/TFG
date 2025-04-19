@@ -1,0 +1,39 @@
+.main-screen {
+    padding: 20px;
+    max-width: 600px;
+    margin: auto;
+    font-family: sans-serif;
+  }
+  
+  .profile-card,
+  .search-section,
+  .requests-section,
+  .result-card,
+  .request-card {
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    padding: 15px;
+    margin: 15px 0;
+    background: #f9f9f9;
+  }
+  
+  input {
+    padding: 8px;
+    margin-right: 10px;
+    width: 60%;
+  }
+  
+  button {
+    padding: 6px 12px;
+    margin: 5px;
+    cursor: pointer;
+    border: none;
+    background-color: #3b82f6;
+    color: white;
+    border-radius: 6px;
+  }
+  
+  button:hover {
+    background-color: #2563eb;
+  }
+  
