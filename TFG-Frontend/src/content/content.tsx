@@ -35,7 +35,9 @@ interface infoModifText {
   tamaño_letra: string;
   color_letra: string;
   color_fondo_letra: string;
-  estilo_letra: string;
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
   inicio: number;
   fin: number;
   textoOriginal: string;
@@ -46,12 +48,22 @@ interface infoModifText {
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(
+    () => JSON.parse(localStorage.getItem("isSidebarVisible") || "true") // Leer el estado inicial desde Local Storage
+  );
   let lastSelectedText = "";
   let entidadId: number | null = null;
   let interaccionId: number | null = null;
 
   const handleLogin = () => {
     setIsLoggedIn(true);
+  };
+
+  // Función para alternar la visibilidad de la sidebar
+  const toggleSidebar = () => {
+    const newVisibility = !isSidebarVisible;
+    setIsSidebarVisible(newVisibility);
+    localStorage.setItem("isSidebarVisible", JSON.stringify(newVisibility)); // Guardar el estado en Local Storage
   };
 
   // Función para calcular la ruta relativa del DOM
@@ -154,29 +166,32 @@ const App = () => {
     tamanioLetra: string,
     colorLetra: string,
     colorFondoLetra: string,
-    estiloLetra: string,
+    boldChanged: boolean,
+    italicChanged: boolean,
+    underlineChanged: boolean,
     inicio: number,
     fin: number,
     textoOriginal: string,
     textoModificado: string
-  ) => {
+  ): Promise<{ id: number }> => {
     try {
-      await axios.post('/modification/texto/crear/', {
+      const response = await axios.post<infoModifText>('/modification/texto/crear/', {
         interaccion: interaccionId,
         elemento: elementoId,
         tamaño_letra: tamanioLetra,
         color_letra: colorLetra,
         color_fondo_letra: colorFondoLetra,
-        estilo_letra: estiloLetra,
+        bold_changed: boldChanged,
+        italic_changed: italicChanged,
+        underline_changed: underlineChanged,
         inicio,
         fin,
-        //textoOriginal,
         textoModificado,
       });
-      alert('Modificación guardada con éxito');
+      return response.data; // Devuelve la respuesta
     } catch (error) {
       console.error('Error al crear la modificación:', error);
-      alert('Error al guardar la modificación');
+      throw error; // Lanza el error si ocurre
     }
   };
 
@@ -195,52 +210,83 @@ const App = () => {
   // Función para aplicar las modificaciones a los elementos
   const applyModificationsToElements = async () => {
     const url = window.location.href;
-
+  
     try {
       // Paso 1: Obtener la interacción
       await createOrGetEntidad(url);
       const interaccionId = await createInteraccion();
       if (!interaccionId) return; // No hay interacción, no se aplica nada
-
+  
       // Paso 2: Obtener los elementos
       const elementos = await getElementos(interaccionId);
-
+  
       // Paso 3: Obtener las modificaciones
       const modificaciones = await getModificaciones(interaccionId);
-
+  
       // Paso 4: Aplicar las modificaciones a los elementos
       modificaciones.forEach((mod) => {
         const elemento = elementos.find((el) => el.id === mod.elemento);
         if (elemento) {
           const targetElement = document.querySelector(elemento.ruta_dom) as HTMLElement;
           if (targetElement) {
-            // Obtener el texto actual del elemento
-            const originalText = targetElement.textContent || "";
-      
-            // Dividir el texto en partes según la posición de inicio y fin de la modificación
-            const beforeText = originalText.slice(0, mod.inicio);
-            const afterText = originalText.slice(mod.fin);
-      
-            // Crear un span para envolver el texto modificado
-            const span = document.createElement("span");
-      
-            // Aplicar estilos al span
-            if (mod.tamaño_letra) span.style.fontSize = mod.tamaño_letra;
-            if (mod.color_letra) span.style.color = mod.color_letra;
-            if (mod.color_fondo_letra) span.style.backgroundColor = mod.color_fondo_letra;
-            if (mod.estilo_letra === "bold") span.style.fontWeight = "bold";
-            if (mod.estilo_letra === "italic") span.style.fontStyle = "italic";
-      
-            // Configurar el texto del span
-            span.textContent = mod.textoModificado;
-      
-            // Limpiar el contenido actual del elemento
-            targetElement.textContent = "";
-      
-            // Reconstruir el contenido del elemento con las partes antes, el span modificado y las partes después
-            if (beforeText) targetElement.appendChild(document.createTextNode(beforeText));
-            targetElement.appendChild(span);
-            if (afterText) targetElement.appendChild(document.createTextNode(afterText));
+            // Obtener el rango de texto afectado
+            const range = document.createRange();
+            const walker = document.createTreeWalker(
+              targetElement,
+              NodeFilter.SHOW_TEXT,
+              null
+            );
+  
+            let currentOffset = 0;
+            let startNode: Text | null = null;
+            let endNode: Text | null = null;
+            let startOffset = 0;
+            let endOffset = 0;
+  
+            // Encontrar los nodos afectados por la modificación
+            while (walker.nextNode()) {
+              const textNode = walker.currentNode as Text;
+              const textLength = textNode.textContent?.length || 0;
+  
+              // Detectar nodo de inicio
+              if (!startNode && currentOffset + textLength > mod.inicio) {
+                startNode = textNode;
+                startOffset = mod.inicio - currentOffset;
+              }
+  
+              // Detectar nodo de fin
+              if (!endNode && currentOffset + textLength >= mod.fin) {
+                endNode = textNode;
+                endOffset = mod.fin - currentOffset;
+                break;
+              }
+  
+              currentOffset += textLength;
+            }
+  
+            if (startNode && endNode) {
+              // Configurar el rango para abarcar los nodos afectados
+              range.setStart(startNode, startOffset);
+              range.setEnd(endNode, endOffset);
+  
+              const fragment = range.extractContents(); // Extraer contenido afectado
+              const span = document.createElement("span");
+  
+              // Aplicar estilos al span
+              if (mod.tamaño_letra) span.style.fontSize = mod.tamaño_letra;
+              if (mod.color_letra) span.style.color = mod.color_letra;
+              if (mod.color_fondo_letra) span.style.backgroundColor = mod.color_fondo_letra;
+              if (mod.bold) span.style.fontWeight = "bold";
+              if (mod.italic) span.style.fontStyle = "italic";
+              if (mod.underline) span.style.textDecoration = "underline";
+
+              // Añadir el ID de la modificación como un atributo en el span
+              span.setAttribute("data-modification-id", mod.id.toString());
+  
+              span.appendChild(fragment); // Envolver el contenido modificado en el span
+              range.insertNode(span); // Insertar el contenido modificado de vuelta en el DOM
+              addHighlightAndDeleteFeature(span);
+            }
           }
         }
       });
@@ -255,7 +301,9 @@ const App = () => {
     tamanioLetra: string,
     colorLetra: string,
     colorFondoLetra: string,
-    estiloLetra: string,
+    boldChanged: boolean,
+    italicChanged: boolean,
+    underlineChanged: boolean,
     inicio: number,
     fin: number,
     textoOriginal: string,
@@ -276,17 +324,29 @@ const App = () => {
       const elementoId = await createElemento(rutaDom, hashContenido);
 
       // Paso 4: Crear la modificación
-      await createModificacion(
+      const response = await createModificacion(
         elementoId,
         tamanioLetra,
         colorLetra,
         colorFondoLetra,
-        estiloLetra,
+        boldChanged,
+        italicChanged,
+         underlineChanged, 
         inicio,
         fin,
         textoOriginal,
         textoModificado
       );
+
+      const modificationId = response.id;
+
+      // Añadir el ID de la modificación al span (ya creado en el frontend)
+      const span = document.querySelector(`[data-temp-modification]`) as HTMLElement;
+      if (span) {
+        span.removeAttribute("data-temp-modification");
+        span.setAttribute("data-modification-id", modificationId.toString());
+      }
+
     } catch (error) {
       console.error('Error en el proceso de guardar modificaciones:', error);
     }
@@ -296,16 +356,16 @@ const App = () => {
   const addHighlightAndDeleteFeature = (element: HTMLElement) => {
     // Guardar el color de fondo original para restaurarlo después
     const originalBackgroundColor = element.style.backgroundColor;
-
+  
     // Agregar eventos de mouseover y mouseout para resaltar
     element.addEventListener("mouseover", () => {
       element.style.backgroundColor = "rgba(255, 255, 0, 0.3)"; // Color sutil de resalte
     });
-
+  
     element.addEventListener("mouseout", () => {
       element.style.backgroundColor = originalBackgroundColor; // Restaurar el color original
     });
-
+  
     // Agregar evento click para mostrar el botón de eliminación
     const handleClickOutside = (e: MouseEvent) => {
       if (!element.contains(e.target as Node)) {
@@ -314,7 +374,7 @@ const App = () => {
         document.removeEventListener("click", handleClickOutside);
       }
     };
-
+  
     element.addEventListener("click", () => {
       if (!element.querySelector(".delete-button")) {
         const deleteButton = document.createElement("button");
@@ -332,18 +392,37 @@ const App = () => {
         deleteButton.style.width = "20px";
         deleteButton.style.height = "20px";
         deleteButton.style.zIndex = "10";
-
+  
         // Evento para eliminar la modificación
-        deleteButton.addEventListener("click", (e) => {
+        deleteButton.addEventListener("click", async (e) => {
           e.stopPropagation(); // Evitar que el evento se propague al elemento padre
-          // Reemplazar el elemento modificado con su texto original
+
+          // Obtener el ID de la modificación desde el atributo del span
+          const modificationId = element.getAttribute("data-modification-id");
+
+          if (modificationId) {
+            try {
+              // Realizar la solicitud DELETE al backend
+              await axios.delete(`/modification/texto/${modificationId}/eliminar-texto/`);
+              console.log(`Modificación con ID ${modificationId} eliminada del backend.`);
+            } catch (error) {
+              console.error(`Error al eliminar la modificación con ID ${modificationId}:`, error);
+            }
+          }
+  
+          // Reemplazar el span con su contenido original
           const parent = element.parentNode;
           if (parent) {
-            const textNode = document.createTextNode(element.textContent || "");
-            parent.replaceChild(textNode, element); // Reemplazar el nodo
+            while (element.firstChild) {
+              parent.insertBefore(element.firstChild, element); // Mover todos los nodos hijos fuera del span
+            }
+            parent.removeChild(element); // Eliminar el span
           }
+  
+          // Eliminar el botón de eliminación
+          deleteButton.remove();
         });
-
+  
         // Añadir el botón de eliminación al elemento
         element.style.position = "relative"; // Asegurarse de que el elemento tenga posición relativa
         element.appendChild(deleteButton);
@@ -416,6 +495,9 @@ const App = () => {
     let textColorChanged = false;
     let bgColorChanged = false;
     let fontSizeChanged = false;
+    let boldChanged = false;
+    let underlineChanged = false;
+    let italicChanged = false;
 
     // Escucha cambios en los colorPickers
     textColorPicker.addEventListener("input", () => {
@@ -461,12 +543,15 @@ const App = () => {
 
       if (boldButton?.classList.contains("active")) {
         span.style.fontWeight = "bold";
+        boldChanged = true;
       }
       if (italicButton?.classList.contains("active")) {
         span.style.fontStyle = "italic";
+        italicChanged = true;
       }
       if (underlineButton?.classList.contains("active")) {
         span.style.textDecoration = "underline";
+        underlineChanged = true;
       }
 
       span.textContent = range.toString();
@@ -483,7 +568,10 @@ const App = () => {
           span.style.fontSize, // Tamaño letra 
           span.style.color, // Color letra 
           span.style.backgroundColor, // Color fondo letra 
-          "bold", // Estilo letra 
+          //"bold", // Estilo letra
+          boldChanged,
+          italicChanged,
+          underlineChanged, 
           inicio,
           fin,
           textoOriginal,
@@ -535,22 +623,81 @@ const App = () => {
     applyModificationsToElements();
   }, []);
 
-  return <Sidebar isLoggedIn={isLoggedIn} onLogin={handleLogin} />;
+  return (
+    <>
+      {/* Sidebar */}
+      {isSidebarVisible && (
+        <div
+          id="tfg-sidebar-root"
+          style={{
+            position: "fixed",
+            top: "0",
+            right: "0",
+            width: "300px",
+            height: "100vh",
+            zIndex: "9999",
+            backgroundColor: "white",
+            boxShadow: "-2px 0 5px rgba(0,0,0,0.1)",
+          }}
+        >
+          <Sidebar isLoggedIn={isLoggedIn} onLogin={handleLogin} />
+        </div>
+      )}
+
+      {/* Botón para mostrar/ocultar la sidebar */}
+      <button
+        onClick={toggleSidebar}
+        style={{
+          position: "fixed",
+          bottom: "20px",
+          right: "20px",
+          zIndex: "10000",
+          backgroundColor: isSidebarVisible ? "red" : "green",
+          color: "white",
+          border: "none",
+          borderRadius: "50%",
+          width: "50px",
+          height: "50px",
+          cursor: "pointer",
+          fontSize: "16px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          opacity: "0.5", // Botón más transparente por defecto
+          transition: "opacity 0.3s ease", // Suavizar la transición
+        }}
+        title={isSidebarVisible ? "Ocultar Sidebar" : "Mostrar Sidebar"}
+        onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")} // Opacidad completa al pasar el ratón
+        onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.5")} // Volver a ser transparente al quitar el ratón
+      >
+        {isSidebarVisible ? "X" : "☰"}
+      </button>
+    </>
+  );
 };
 
 // Crear un contenedor para el sidebar
-const container = document.createElement("div");
-container.id = "tfg-sidebar-root";
-container.style.position = "fixed";
-container.style.top = "0";
-container.style.right = "0";
-container.style.width = "300px";
-container.style.height = "100vh";
-container.style.zIndex = "9999";
-container.style.backgroundColor = "white";
-container.style.boxShadow = "-2px 0 5px rgba(0,0,0,0.1)";
-document.body.appendChild(container);
+// const container = document.createElement("div");
+// container.id = "tfg-sidebar-root";
+// container.style.position = "fixed";
+// container.style.top = "0";
+// container.style.right = "0";
+// container.style.width = "300px";
+// container.style.height = "100vh";
+// container.style.zIndex = "9999";
+// container.style.backgroundColor = "white";
+// container.style.boxShadow = "-2px 0 5px rgba(0,0,0,0.1)";
+// document.body.appendChild(container);
+
+// // Renderizar el componente React (sidebar)
+// const root = createRoot(container);
+// root.render(<App />);
 
 // Renderizar el componente React (sidebar)
+const container = document.createElement("div");
+container.id = "root";
+document.body.appendChild(container);
+
 const root = createRoot(container);
 root.render(<App />);
