@@ -35,6 +35,11 @@ class UserLoginSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
   class Meta:
     model = User
+    fields = ['id', 'email', 'name', 'first_name', 'last_name', 'profile_image', 'friends']
+
+class UserSearchSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = User
     fields = ['id', 'email', 'name', 'bio', 'profile_image', 'friends']
 
 class UserChangePasswordSerializer(serializers.Serializer):
@@ -133,9 +138,7 @@ class FriendRequestSerializer(serializers.ModelSerializer):
         raise serializers.ValidationError("This user has already sent you a friend request.")
 
 
-      return FriendRequest.objects.create(**validated_data)
-    
-      
+      return FriendRequest.objects.create(**validated_data)   
 
 
 class AcceptFriendRequestSerializer(serializers.Serializer):

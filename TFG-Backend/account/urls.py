@@ -4,7 +4,8 @@ from account.views import (
     UserChangePasswordView,SendPasswordResetEmailView,
     UserPasswordResetView, SendFriendRequestView, 
     AcceptFriendRequestView, CancelFriendRequestView,
-    DeleteFriendRequestView, RemoveFriendView, FriendRequestListView
+    DeleteFriendRequestView, RemoveFriendView, FriendRequestListView, 
+    UserSearchView
 )
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -22,6 +23,6 @@ urlpatterns = [
     path('friend-request/delete/', DeleteFriendRequestView.as_view(), name='delete_friend_request'),
     path('friend/remove/', RemoveFriendView.as_view(), name='remove_friend'),
     path('friend-request/list/', FriendRequestListView.as_view(), name='list_friend_requests'),
-
+    path('profile/search/', UserSearchView.as_view(), name='buscar-usuarios'),
 
 ]
