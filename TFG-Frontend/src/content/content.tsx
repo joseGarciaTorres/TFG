@@ -46,14 +46,423 @@ interface infoModifText {
   elemento: number;
 }
 
+interface infoModifNota{
+  id: number;
+  contenido: string;
+  modificacionTextoId: number;
+  interaccion: number;
+  elemento: number;
+}
+
+interface infoModif{
+  texto: infoModifText[];
+  anotacion: infoModifNota[];
+}
+
+export let entidadId: number | null = null;
+let interaccionId: number | null = null;
+let elementoId: number | null = null;
+
+const getEntidad = async (url: string): Promise<number> => {
+  console.log(entidadId);
+  if (entidadId) return entidadId;
+
+  try {
+    const response = await axios.get<infoEntidad>(`/interaction/entidad/${encodeURIComponent(url)}`);
+    entidadId = response.data.id;
+    return entidadId;
+  } catch (error) {
+    console.error('Error al crear/obtener la entidad:', error);
+    throw error;
+  }
+};
+
+
+// Función para crear o obtener la interacción
+const createInteraccion = async (): Promise<number> => {
+  if (interaccionId) return interaccionId;
+
+  try {
+    const response = await axios.post<infoInterac>('/interaction/crear/', {
+      entidad: entidadId,
+    });
+    interaccionId = response.data.id;
+    return interaccionId;
+  } catch (error) {
+    console.error('Error al crear la interacción:', error);
+    throw error;
+  }
+};
+
+const getInteraccion = async (url: string): Promise<number> => {
+  if(interaccionId)
+    return interaccionId
+  
+  try {
+    const response = await axios.get<infoInterac>(`/interaction/obtener/${url}`);
+    interaccionId = response.data.id;
+    console.log("id de la interaccion:")
+    console.log(interaccionId)
+    return interaccionId;
+  } catch (error) {
+    console.error('No hay ninguna interaccion de este usuario en este elemento:', error);
+    throw error;
+  }
+};
+
+
+// Función para obtener los elementos de la interacción
+const getElementos = async (interaccionId: number): Promise<infoElem[]> => {
+  try {
+    const response = await axios.get<infoElem[]>(`/interaction/${interaccionId}/elementos/`);
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener los elementos:", error);
+    throw error;
+  }
+};
+
+
+// Función para obtener las modificaciones de la interacción
+// Función para obtener las modificaciones de la interacción
+const getModificaciones = async (interaccionId: number): Promise<infoModif> => {
+  try {
+    const response = await axios.get<{ texto: infoModifText[]; anotacion: infoModifNota[] }>(
+      `/modification/${interaccionId}/modificaciones/`
+    );
+
+    // Retornar directamente el objeto con las propiedades texto y anotacion
+    return {
+      texto: response.data.texto,
+      anotacion: response.data.anotacion,
+    };
+  } catch (error) {
+    console.error("Error al obtener las modificaciones:", error);
+    throw error;
+  }
+};
+
+// Función para crear una modificación de anotación
+const createModificacionAnotacion = async (
+  contenido: string,
+  modificacionTextoId: number
+): Promise<void> => {
+  try {
+    // Realizar la solicitud POST al endpoint
+    const response = await axios.post(`/modification/nota/crear/`, {
+      contenido,
+      interaccion: interaccionId,
+      modificacionTextoId,
+    });
+
+    console.log("Modificación de anotación creada correctamente:", response.data);
+  } catch (error) {
+    console.error("Error al crear la modificación de anotación:", error);
+    console.log(interaccionId, " ", modificacionTextoId);
+    throw error;
+  }
+};
+
+
+// Función para resaltar, eliminar modificaciones y añadir/modificar notas
+const addHighlightAndDeleteFeature = (
+  element: HTMLElement,
+  annotation: infoModifNota | null
+) => {
+  const originalBackgroundColor = element.style.backgroundColor;
+  const hasNote = !!element.getAttribute("data-note"); // Verificar si hay una nota asociada
+
+  // Asegurarse de que el elemento tenga posición relativa
+  element.style.position = "relative";
+
+  // Aplicar borde si hay una nota asociada
+  if (hasNote || annotation) {
+    element.style.border = "2px dashed black"; // Bordes para indicar que tiene nota (puedes ajustar el estilo)
+    element.style.padding = "2px"; // Asegurar que el texto no se solape con el borde
+  } else {
+    element.style.border = "none"; // Sin borde si no hay nota
+  }
+
+  // Agregar eventos de mouseover y mouseout para resaltar
+  element.addEventListener("mouseover", () => {
+    element.style.backgroundColor = "rgba(255, 255, 0, 0.3)"; // Color sutil de resalte
+
+    // Mostrar la nota como tooltip si existe
+    const currentNote = element.getAttribute("data-note");
+    if (currentNote) {
+      renderNotaTooltip(currentNote, element);
+    }
+    else if (annotation) {
+      renderNotaTooltip(annotation.contenido, element);
+    }
+  });
+
+  element.addEventListener("mouseout", () => {
+    element.style.backgroundColor = originalBackgroundColor; // Restaurar el color original
+
+    // Eliminar el tooltip si existe
+    const existingTooltip = element.querySelector(".note-tooltip");
+    if (existingTooltip) {
+      existingTooltip.remove();
+    }
+  });
+
+  // Agregar evento click para mostrar botones de acción
+  const handleClickOutside = (e: MouseEvent) => {
+    if (!element.contains(e.target as Node)) {
+      const buttonsContainer = element.querySelector(".buttons-container");
+      if (buttonsContainer) buttonsContainer.remove();
+      document.removeEventListener("click", handleClickOutside);
+    }
+  };
+
+  element.addEventListener("click", () => {
+    if (!element.querySelector(".buttons-container")) {
+      const buttonsContainer = document.createElement("div");
+      buttonsContainer.className = "buttons-container";
+      buttonsContainer.style.position = "absolute";
+      buttonsContainer.style.top = "10px";
+      buttonsContainer.style.right = "-10px";
+      buttonsContainer.style.display = "flex";
+      buttonsContainer.style.gap = "5px";
+      buttonsContainer.style.zIndex = "10";
+
+      // Botón de eliminación
+      const deleteButton = document.createElement("button");
+      deleteButton.textContent = "❌";
+      deleteButton.style.background = "red";
+      deleteButton.style.color = "white";
+      deleteButton.style.border = "none";
+      deleteButton.style.borderRadius = "50%";
+      deleteButton.style.cursor = "pointer";
+      deleteButton.style.fontSize = "12px";
+      deleteButton.style.width = "20px";
+      deleteButton.style.height = "20px";
+
+      deleteButton.addEventListener("click", async (e) => {
+        e.stopPropagation();
+
+        const modificationId = element.getAttribute("data-modification-id");
+
+        if (modificationId) {
+          try {
+            await axios.delete(`/modification/texto/${modificationId}/eliminar-texto/`);
+            console.log(`Modificación con ID ${modificationId} eliminada del backend.`);
+          } catch (error) {
+            console.error(`Error al eliminar la modificación con ID ${modificationId}:`, error);
+          }
+        }
+
+        const parent = element.parentNode;
+        if (parent) {
+          while (element.firstChild) {
+            parent.insertBefore(element.firstChild, element);
+          }
+          parent.removeChild(element);
+        }
+
+        buttonsContainer.remove();
+      });
+
+      // Botón para añadir o modificar nota
+      const noteButton = document.createElement("button");
+      noteButton.textContent = "📝";
+      noteButton.style.background = hasNote ? "green" : "blue"; // Cambiar color según estado
+      noteButton.style.color = "white";
+      noteButton.style.border = "none";
+      noteButton.style.borderRadius = "50%";
+      noteButton.style.cursor = "pointer";
+      noteButton.style.fontSize = "12px";
+      noteButton.style.width = "20px";
+      noteButton.style.height = "20px";
+
+      noteButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        showNoteInput(element); // Mostrar el input para añadir/modificar la nota
+      });
+
+      buttonsContainer.appendChild(deleteButton);
+      buttonsContainer.appendChild(noteButton);
+      element.appendChild(buttonsContainer);
+      document.addEventListener("click", handleClickOutside);
+    }
+  });
+};
+
+// Función para mostrar el input para añadir o modificar una nota
+const showNoteInput = (element: HTMLElement) => {
+  const noteInputContainer = document.createElement("div");
+  noteInputContainer.style.position = "absolute";
+  noteInputContainer.style.top = "100%";
+  noteInputContainer.style.left = "0";
+  noteInputContainer.style.backgroundColor = "white";
+  noteInputContainer.style.border = "1px solid black";
+  noteInputContainer.style.padding = "10px";
+  noteInputContainer.style.zIndex = "1000";
+
+  const textarea = document.createElement("textarea");
+  textarea.style.width = "200px";
+  textarea.style.height = "50px";
+
+  const currentNote = element.getAttribute("data-note");
+  if (currentNote) {
+    textarea.value = currentNote;
+  }
+
+  const saveButton = document.createElement("button");
+  saveButton.textContent = "Guardar";
+  saveButton.style.marginTop = "5px";
+  saveButton.addEventListener("click", () => {
+    const nuevaNota = textarea.value;
+    element.setAttribute("data-note", nuevaNota); // Guardar la nota como un atributo del elemento
+    element.style.border = nuevaNota ? "2px dashed black" : "none"; // Actualizar borde según estado
+    console.log(`Nota guardada: ${nuevaNota}, en el elemento ${element.getAttribute("data-modification-id")}`);
+    createModificacionAnotacion(nuevaNota, Number(element.getAttribute("data-modification-id")));
+    noteInputContainer.remove();
+  });
+
+  noteInputContainer.appendChild(textarea);
+  noteInputContainer.appendChild(saveButton);
+
+  element.appendChild(noteInputContainer);
+};
+
+// Función para mostrar el tooltip de una nota
+const renderNotaTooltip = (nota: string, element: HTMLElement) => {
+  const tooltip = document.createElement("div");
+  tooltip.className = "note-tooltip";
+  tooltip.textContent = nota;
+  tooltip.style.position = "absolute";
+  tooltip.style.top = "-30px";
+  tooltip.style.left = "0";
+  tooltip.style.backgroundColor = "yellow";
+  tooltip.style.padding = "5px";
+  tooltip.style.border = "1px solid black";
+  tooltip.style.borderRadius = "5px";
+  tooltip.style.zIndex = "1000";
+  tooltip.style.fontSize = "12px";
+
+  element.appendChild(tooltip);
+
+  element.addEventListener("mouseleave", () => {
+    tooltip.remove();
+  });
+};
+
+// Función para aplicar las modificaciones a los elementos
+const applyModificationsToElements = async () => {
+  const url = window.location.href;
+
+  try {
+    // Paso 1: Obtener la interacción
+    await getEntidad(url);
+    const interaccionId = await getInteraccion(url);
+    console.log("se aplica a");
+    console.log(interaccionId);
+    if (!interaccionId) return; // No hay interacción, no se aplica nada
+
+    // Paso 2: Obtener los elementos
+    const elementos = await getElementos(interaccionId);
+
+    // Paso 3: Obtener las modificaciones
+    const modificaciones = await getModificaciones(interaccionId);
+    console.log(modificaciones);
+    const modTexto = modificaciones.texto
+    const modAnotaciones = modificaciones.anotacion;
+    // Paso 4: Aplicar las modificaciones a los elementos
+    modTexto.forEach((mod) => {
+      const elemento = elementos.find((el) => el.id === mod.elemento);
+      if (elemento) {
+        const targetElement = document.querySelector(elemento.ruta_dom) as HTMLElement;
+        if (targetElement) {
+          // Obtener el rango de texto afectado
+          const range = document.createRange();
+          const walker = document.createTreeWalker(
+            targetElement,
+            NodeFilter.SHOW_TEXT,
+            null
+          );
+
+          let currentOffset = 0;
+          let startNode: Text | null = null;
+          let endNode: Text | null = null;
+          let startOffset = 0;
+          let endOffset = 0;
+
+          // Encontrar los nodos afectados por la modificación
+          while (walker.nextNode()) {
+            const textNode = walker.currentNode as Text;
+            const textLength = textNode.textContent?.length || 0;
+
+            // Detectar nodo de inicio
+            if (!startNode && currentOffset + textLength > mod.inicio) {
+              startNode = textNode;
+              startOffset = mod.inicio - currentOffset;
+            }
+
+            // Detectar nodo de fin
+            if (!endNode && currentOffset + textLength >= mod.fin) {
+              endNode = textNode;
+              endOffset = mod.fin - currentOffset;
+              break;
+            }
+
+            currentOffset += textLength;
+          }
+
+          if (startNode && endNode) {
+            // Configurar el rango para abarcar los nodos afectados
+            range.setStart(startNode, startOffset);
+            range.setEnd(endNode, endOffset);
+
+            const fragment = range.extractContents(); // Extraer contenido afectado
+            const span = document.createElement("span");
+
+            // Aplicar estilos al span
+            if (mod.tamaño_letra) span.style.fontSize = mod.tamaño_letra;
+            if (mod.color_letra) span.style.color = mod.color_letra;
+            if (mod.color_fondo_letra) span.style.backgroundColor = mod.color_fondo_letra;
+            if (mod.bold) span.style.fontWeight = "bold";
+            if (mod.italic) span.style.fontStyle = "italic";
+            if (mod.underline) span.style.textDecoration = "underline";
+
+            // Añadir el ID de la modificación como un atributo en el span
+            span.setAttribute("data-modification-id", mod.id.toString());
+
+            span.appendChild(fragment); // Envolver el contenido modificado en el span
+            range.insertNode(span); // Insertar el contenido modificado de vuelta en el DOM
+            // Buscar anotaciones relacionadas con esta modificación
+            const relatedAnnotation = modAnotaciones.find(
+              (annotation) => annotation.modificacionTextoId === mod.id
+            );
+
+            // Llamar a la función reutilizable con la modificación y la anotación
+            addHighlightAndDeleteFeature(span, relatedAnnotation || null);
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error aplicando las modificaciones:", error);
+  }
+};
+
+
+// Función para cambiar el `entidadId` y recargar modificaciones
+export const setEntidadIdAndReload = async (newInteractionId: number) => {
+  interaccionId = newInteractionId;
+  console.log(`Entidad cambiada a: ${newInteractionId}`);
+  await applyModificationsToElements(); // Llama a la función global
+  console.log(`Se han añadido las modificaciones`);
+};
+
+
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(
     () => JSON.parse(localStorage.getItem("isSidebarVisible") || "true") // Leer el estado inicial desde Local Storage
   );
   let lastSelectedText = "";
-  let entidadId: number | null = null;
-  let interaccionId: number | null = null;
 
   const handleLogin = () => {
     setIsLoggedIn(true);
@@ -104,7 +513,7 @@ const App = () => {
   };
 
   // Función para crear o obtener la entidad
-  const createOrGetEntidad = async (url: string): Promise<number> => {
+  const createEntidad = async (url: string): Promise<number> => {
     if (entidadId) return entidadId;
 
     try {
@@ -113,22 +522,6 @@ const App = () => {
       return entidadId;
     } catch (error) {
       console.error('Error al crear/obtener la entidad:', error);
-      throw error;
-    }
-  };
-
-  // Función para crear o obtener la interacción
-  const createInteraccion = async (): Promise<number> => {
-    if (interaccionId) return interaccionId;
-
-    try {
-      const response = await axios.post<infoInterac>('/interaction/crear/', {
-        entidad: entidadId,
-      });
-      interaccionId = response.data.id;
-      return interaccionId;
-    } catch (error) {
-      console.error('Error al crear la interacción:', error);
       throw error;
     }
   };
@@ -148,21 +541,8 @@ const App = () => {
     }
   };
 
-
-  // Función para obtener los elementos de la interacción
-  const getElementos = async (interaccionId: number): Promise<infoElem[]> => {
-    try {
-      const response = await axios.get<infoElem[]>(`/interaction/${interaccionId}/elementos/`);
-      return response.data;
-    } catch (error) {
-      console.error("Error al obtener los elementos:", error);
-      throw error;
-    }
-  };
-
-  // Función para crear la modificación
-  const createModificacion = async (
-    elementoId: number,
+  // Función para crear la modificación de tipo texto
+  const createModificacionTexto = async (
     tamanioLetra: string,
     colorLetra: string,
     colorFondoLetra: string,
@@ -181,9 +561,9 @@ const App = () => {
         tamaño_letra: tamanioLetra,
         color_letra: colorLetra,
         color_fondo_letra: colorFondoLetra,
-        bold_changed: boldChanged,
-        italic_changed: italicChanged,
-        underline_changed: underlineChanged,
+        bold: boldChanged,
+        italic: italicChanged,
+        underline: underlineChanged,
         inicio,
         fin,
         textoModificado,
@@ -195,105 +575,6 @@ const App = () => {
     }
   };
 
-  // Función para obtener las modificaciones de la interacción
-  const getModificaciones = async (interaccionId: number): Promise<infoModifText[]> => {
-    try {
-      const response = await axios.get<{ texto: infoModifText[] }>(`/modification/${interaccionId}/modificaciones/`);
-      return response.data.texto;
-    } catch (error) {
-      console.error("Error al obtener las modificaciones:", error);
-      throw error;
-    }
-  };
-
-
-  // Función para aplicar las modificaciones a los elementos
-  const applyModificationsToElements = async () => {
-    const url = window.location.href;
-  
-    try {
-      // Paso 1: Obtener la interacción
-      await createOrGetEntidad(url);
-      const interaccionId = await createInteraccion();
-      if (!interaccionId) return; // No hay interacción, no se aplica nada
-  
-      // Paso 2: Obtener los elementos
-      const elementos = await getElementos(interaccionId);
-  
-      // Paso 3: Obtener las modificaciones
-      const modificaciones = await getModificaciones(interaccionId);
-  
-      // Paso 4: Aplicar las modificaciones a los elementos
-      modificaciones.forEach((mod) => {
-        const elemento = elementos.find((el) => el.id === mod.elemento);
-        if (elemento) {
-          const targetElement = document.querySelector(elemento.ruta_dom) as HTMLElement;
-          if (targetElement) {
-            // Obtener el rango de texto afectado
-            const range = document.createRange();
-            const walker = document.createTreeWalker(
-              targetElement,
-              NodeFilter.SHOW_TEXT,
-              null
-            );
-  
-            let currentOffset = 0;
-            let startNode: Text | null = null;
-            let endNode: Text | null = null;
-            let startOffset = 0;
-            let endOffset = 0;
-  
-            // Encontrar los nodos afectados por la modificación
-            while (walker.nextNode()) {
-              const textNode = walker.currentNode as Text;
-              const textLength = textNode.textContent?.length || 0;
-  
-              // Detectar nodo de inicio
-              if (!startNode && currentOffset + textLength > mod.inicio) {
-                startNode = textNode;
-                startOffset = mod.inicio - currentOffset;
-              }
-  
-              // Detectar nodo de fin
-              if (!endNode && currentOffset + textLength >= mod.fin) {
-                endNode = textNode;
-                endOffset = mod.fin - currentOffset;
-                break;
-              }
-  
-              currentOffset += textLength;
-            }
-  
-            if (startNode && endNode) {
-              // Configurar el rango para abarcar los nodos afectados
-              range.setStart(startNode, startOffset);
-              range.setEnd(endNode, endOffset);
-  
-              const fragment = range.extractContents(); // Extraer contenido afectado
-              const span = document.createElement("span");
-  
-              // Aplicar estilos al span
-              if (mod.tamaño_letra) span.style.fontSize = mod.tamaño_letra;
-              if (mod.color_letra) span.style.color = mod.color_letra;
-              if (mod.color_fondo_letra) span.style.backgroundColor = mod.color_fondo_letra;
-              if (mod.bold) span.style.fontWeight = "bold";
-              if (mod.italic) span.style.fontStyle = "italic";
-              if (mod.underline) span.style.textDecoration = "underline";
-
-              // Añadir el ID de la modificación como un atributo en el span
-              span.setAttribute("data-modification-id", mod.id.toString());
-  
-              span.appendChild(fragment); // Envolver el contenido modificado en el span
-              range.insertNode(span); // Insertar el contenido modificado de vuelta en el DOM
-              addHighlightAndDeleteFeature(span);
-            }
-          }
-        }
-      });
-    } catch (error) {
-      console.error("Error aplicando las modificaciones:", error);
-    }
-  };
 
   // Función que se ejecuta al aplicar los cambios desde el menú flotante
   const applyChanges = async (
@@ -313,7 +594,7 @@ const App = () => {
 
     try {
       // Paso 1: Crear o obtener la entidad
-      await createOrGetEntidad(url);
+      await createEntidad(url);
 
       // Paso 2: Crear la interacción
       await createInteraccion();
@@ -321,11 +602,10 @@ const App = () => {
       // Paso 3: Crear el elemento
       const rutaDom = calculateDomPath(element);
       const hashContenido = generateHash(textoOriginal);
-      const elementoId = await createElemento(rutaDom, hashContenido);
+      elementoId = await createElemento(rutaDom, hashContenido);
 
       // Paso 4: Crear la modificación
-      const response = await createModificacion(
-        elementoId,
+      const response = await createModificacionTexto(
         tamanioLetra,
         colorLetra,
         colorFondoLetra,
@@ -350,85 +630,6 @@ const App = () => {
     } catch (error) {
       console.error('Error en el proceso de guardar modificaciones:', error);
     }
-  };
-
-  // Función para resaltar y permitir eliminar modificaciones
-  const addHighlightAndDeleteFeature = (element: HTMLElement) => {
-    // Guardar el color de fondo original para restaurarlo después
-    const originalBackgroundColor = element.style.backgroundColor;
-  
-    // Agregar eventos de mouseover y mouseout para resaltar
-    element.addEventListener("mouseover", () => {
-      element.style.backgroundColor = "rgba(255, 255, 0, 0.3)"; // Color sutil de resalte
-    });
-  
-    element.addEventListener("mouseout", () => {
-      element.style.backgroundColor = originalBackgroundColor; // Restaurar el color original
-    });
-  
-    // Agregar evento click para mostrar el botón de eliminación
-    const handleClickOutside = (e: MouseEvent) => {
-      if (!element.contains(e.target as Node)) {
-        const deleteButton = element.querySelector(".delete-button");
-        if (deleteButton) deleteButton.remove(); // Eliminar el botón de eliminar
-        document.removeEventListener("click", handleClickOutside);
-      }
-    };
-  
-    element.addEventListener("click", () => {
-      if (!element.querySelector(".delete-button")) {
-        const deleteButton = document.createElement("button");
-        deleteButton.textContent = ""; // Botón sin texto visible
-        deleteButton.className = "delete-button";
-        deleteButton.style.position = "absolute";
-        deleteButton.style.top = "0";
-        deleteButton.style.right = "0";
-        deleteButton.style.background = "red";
-        deleteButton.style.color = "white";
-        deleteButton.style.border = "none";
-        deleteButton.style.borderRadius = "50%";
-        deleteButton.style.cursor = "pointer";
-        deleteButton.style.fontSize = "12px";
-        deleteButton.style.width = "20px";
-        deleteButton.style.height = "20px";
-        deleteButton.style.zIndex = "10";
-  
-        // Evento para eliminar la modificación
-        deleteButton.addEventListener("click", async (e) => {
-          e.stopPropagation(); // Evitar que el evento se propague al elemento padre
-
-          // Obtener el ID de la modificación desde el atributo del span
-          const modificationId = element.getAttribute("data-modification-id");
-
-          if (modificationId) {
-            try {
-              // Realizar la solicitud DELETE al backend
-              await axios.delete(`/modification/texto/${modificationId}/eliminar-texto/`);
-              console.log(`Modificación con ID ${modificationId} eliminada del backend.`);
-            } catch (error) {
-              console.error(`Error al eliminar la modificación con ID ${modificationId}:`, error);
-            }
-          }
-  
-          // Reemplazar el span con su contenido original
-          const parent = element.parentNode;
-          if (parent) {
-            while (element.firstChild) {
-              parent.insertBefore(element.firstChild, element); // Mover todos los nodos hijos fuera del span
-            }
-            parent.removeChild(element); // Eliminar el span
-          }
-  
-          // Eliminar el botón de eliminación
-          deleteButton.remove();
-        });
-  
-        // Añadir el botón de eliminación al elemento
-        element.style.position = "relative"; // Asegurarse de que el elemento tenga posición relativa
-        element.appendChild(deleteButton);
-        document.addEventListener("click", handleClickOutside); // Detectar clic fuera del elemento
-      }
-    });
   };
 
   // Función que crea y muestra el menú flotante
@@ -581,7 +782,7 @@ const App = () => {
 
 
       // Añadir funcionalidades de resaltar y eliminar
-      addHighlightAndDeleteFeature(span);
+      addHighlightAndDeleteFeature(span, null);
 
       lastSelectedText = "";
       menu.remove();

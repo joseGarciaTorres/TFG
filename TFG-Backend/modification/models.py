@@ -36,13 +36,13 @@ class ModificacionTexto(ModificacionBase):
 # Las siguientes son placeholders para cuando tengas Anotacion o Elemento
 class ModificacionAnotacion(ModificacionBase):
     contenido = models.TextField(blank=True, null=True)
-    tamaño_letra = models.CharField(max_length=20,blank=True, null=True)
-    color_letra = models.CharField(max_length=20, blank=True, null=True)
-    color_fondo_letra = models.CharField(max_length=20, blank=True, null=True)
-    estilo_letra = models.CharField(max_length=20, blank=True, null=True)
-    bold = models.BooleanField(blank=True, null=True)
-    italic = models.BooleanField(blank=True, null=True)
-    underline = models.BooleanField(blank=True, null=True)
+    modificacionTextoId = models.ForeignKey(
+        ModificacionTexto,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='modificacion_tipo_anotacion'
+    )
 
 class ModificacionElemento(ModificacionBase):
     forma = models.FileField(blank=True, null=True)

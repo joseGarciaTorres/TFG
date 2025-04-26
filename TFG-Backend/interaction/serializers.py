@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from account.models import User
 
 from .models import (
     Entidad, Elemento, Interaccion,
@@ -22,6 +23,15 @@ class InteraccionSerializer(serializers.ModelSerializer):
         model = Interaccion
         fields = '__all__'
         read_only_fields = ['usuarios_realizan', 'usuarios_visualizan', 'owner']
+
+
+class InfoInteraccionSerializer(serializers.ModelSerializer):
+    entidad = serializers.CharField(source='entidad.url', read_only=True)
+    #owner = serializers.CharField(source='owner.name', read_only=True)
+
+    class Meta:
+        model = Interaccion
+        fields = '__all__'
 
 
 class InteraccionCompartidaSerializer(serializers.ModelSerializer):

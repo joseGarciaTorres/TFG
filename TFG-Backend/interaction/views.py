@@ -9,13 +9,13 @@ from .models import Entidad, Interaccion, InteraccionCompartida, Elemento
 from modification.models import ModificacionTexto
 from .serializers import (
     EntidadSerializer, InteraccionSerializer, InteraccionCompartidaSerializer, 
-    ElementoSerializer, InteraccionPublicaSerializer
+    ElementoSerializer, InteraccionPublicaSerializer, InfoInteraccionSerializer
 )
 from account.models import User
 from interaction.filters import InteraccionFilter
 
 # 1. Obtener o crear una entidad desde su URL
-class ObtenerCrearEntidadView(APIView):
+class CrearEntidadView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
@@ -23,9 +23,37 @@ class ObtenerCrearEntidadView(APIView):
         if not url:
             return Response({"error": "URL is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        entidad, created = Entidad.objects.get_or_create(url=url)
+        entidad = Entidad.objects.create(url=url)
         serializer = EntidadSerializer(entidad)
-        return Response(serializer.data, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+class ObtenerEntidadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, url, format=None):
+        try:
+            entidad = Entidad.objects.get(url=url)
+        except Entidad.DoesNotExist:
+            return Response({"error": "Entidad no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = EntidadSerializer(entidad)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ObtenerInteraccionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, url, format=None):
+        try:
+            entidad = Entidad.objects.get(url=url)
+        except Entidad.DoesNotExist:
+            return Response({"error": "Entidad no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            interaccion = Interaccion.objects.get(entidad = entidad, owner = request.user)
+        except Interaccion.DoesNotExist:
+            return Response({"error": "Interaccion no encontrada."}, status=status.HTTP_404_NOT_FOUND)  
+        serializer = InteraccionSerializer(interaccion)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # 2. Crear una interacción nueva (privada o pública)
@@ -191,6 +219,60 @@ class VerInteraccionView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response({"error": "No tienes acceso a esta interacción."}, status=status.HTTP_403_FORBIDDEN)
+    
+    def delete(self, request, interaccion_id, format=None):
+        try:
+            interaccion = Interaccion.objects.get(id=interaccion_id)
+        except Interaccion.DoesNotExist:
+            return Response({"error": "Interacción no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Verifica si el usuario actual es el dueño de la interacción
+        if interaccion.owner != request.user:
+            return Response({"error": "No tienes permiso para eliminar esta interacción."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Al eliminar la interacción, las modificaciones se borran automáticamente por el on_delete=models.CASCADE
+        interaccion.delete()
+
+        return Response({"mensaje": "Interacción y modificaciones asociadas eliminadas correctamente."}, status=status.HTTP_204_NO_CONTENT)
+    
+
+class MisInteraccionesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        user = request.user
+
+        interacciones_visualiza = Interaccion.objects.filter(usuarios_visualizan=user)
+        interacciones_realiza = Interaccion.objects.filter(usuarios_realizan=user)
+
+        # Unir los querysets y quitar duplicados si hay
+        interacciones = (interacciones_visualiza | interacciones_realiza).distinct()
+
+        serializer = InfoInteraccionSerializer(interacciones, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class MisInteraccionesUrlView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, url, format=None):
+        user = request.user
+
+        # Filtrar interacciones en las que el usuario participa y la entidad tiene la url dada
+        interacciones_visualiza = Interaccion.objects.filter(
+            usuarios_visualizan=user,
+            entidad__url=url
+        )
+        interacciones_realiza = Interaccion.objects.filter(
+            usuarios_realizan=user,
+            entidad__url=url
+        )
+
+        # Unir los querysets y quitar duplicados
+        interacciones = (interacciones_visualiza | interacciones_realiza).distinct()
+
+        serializer = InfoInteraccionSerializer(interacciones, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 class CrearElementoView(APIView):
@@ -327,7 +409,7 @@ class UnirseInteraccionPublicaView(APIView):
 class EliminarUsuariosDeInteraccionView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def delete(self, request, interaccion_id):
+    def post(self, request, interaccion_id):
         user = request.user
         user_ids = request.data.get('usuarios', [])  # Esperamos un array de IDs
 
@@ -381,3 +463,28 @@ class InteraccionesPorUsuarioView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class UnsubscribeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, interaccion_id):
+        user = request.user
+
+        try:
+            interaccion = Interaccion.objects.get(id=interaccion_id)
+        except Interaccion.DoesNotExist:
+            return Response({"error": "Interacción no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+        if interaccion.owner == user:
+            return Response({"error": "El creador no puede desubcribirse de la interaccion."}, status=status.HTTP_403_FORBIDDEN)
+
+
+        usuario = User.objects.get(id=user.id)
+        if usuario in interaccion.usuarios_visualizan.all():
+            interaccion.usuarios_visualizan.remove(usuario)
+
+        if usuario in interaccion.usuarios_realizan.all():
+            interaccion.usuarios_realizan.remove(usuario)
+
+        interaccion.save()
+
+        return Response({"msg": "Te has desubscrito correctamente"}, status=status.HTTP_200_OK)
