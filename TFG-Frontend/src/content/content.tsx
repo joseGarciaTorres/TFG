@@ -62,6 +62,7 @@ interface infoModif{
 export let entidadId: number | null = null;
 let interaccionId: number | null = null;
 let elementoId: number | null = null;
+let socket: WebSocket | null = null;
 
 const getEntidad = async (url: string): Promise<number> => {
   console.log(entidadId);
@@ -147,19 +148,36 @@ const createModificacionAnotacion = async (
   contenido: string,
   modificacionTextoId: number
 ): Promise<void> => {
-  try {
-    // Realizar la solicitud POST al endpoint
-    const response = await axios.post(`/modification/nota/crear/`, {
-      contenido,
-      interaccion: interaccionId,
-      modificacionTextoId,
-    });
+  if(socket){
+    try{
+      socket.send(JSON.stringify({
+        type: 'modificacion_nota',
+        data: {
+          contenido,
+          interaccion: interaccionId,
+          modificacionTextoId,
+        },
+      }));
+    } catch (error) {
+      console.error('Error enviando la modificación:', error);
+    }
+    
+  }
+  else{
+    try {
+      // Realizar la solicitud POST al endpoint
+      const response = await axios.post(`/modification/nota/crear/`, {
+        contenido,
+        interaccion: interaccionId,
+        modificacionTextoId,
+      });
 
-    console.log("Modificación de anotación creada correctamente:", response.data);
-  } catch (error) {
-    console.error("Error al crear la modificación de anotación:", error);
-    console.log(interaccionId, " ", modificacionTextoId);
-    throw error;
+      console.log("Modificación de anotación creada correctamente:", response.data);
+    } catch (error) {
+      console.error("Error al crear la modificación de anotación:", error);
+      console.log(interaccionId, " ", modificacionTextoId);
+      throw error;
+    }
   }
 };
 
@@ -245,11 +263,26 @@ const addHighlightAndDeleteFeature = (
         const modificationId = element.getAttribute("data-modification-id");
 
         if (modificationId) {
-          try {
-            await axios.delete(`/modification/texto/${modificationId}/eliminar-texto/`);
-            console.log(`Modificación con ID ${modificationId} eliminada del backend.`);
-          } catch (error) {
-            console.error(`Error al eliminar la modificación con ID ${modificationId}:`, error);
+          if(socket){
+            try {
+              socket.send(JSON.stringify({
+                type: 'delete_modification',
+                data: {
+                  interaccion: interaccionId,
+                  modificacionTextoId: Number(modificationId),
+                },
+              }));
+            } catch (error) {
+              console.error('Error enviando la eliminación:', error);
+            }
+          }
+          else{
+            try {
+              await axios.delete(`/modification/texto/${modificationId}/eliminar-texto/`);
+              console.log(`Modificación con ID ${modificationId} eliminada del backend.`);
+            } catch (error) {
+              console.error(`Error al eliminar la modificación con ID ${modificationId}:`, error);
+            }
           }
         }
 
@@ -350,10 +383,11 @@ const renderNotaTooltip = (nota: string, element: HTMLElement) => {
 };
 
 // Función para aplicar las modificaciones a los elementos
-const applyModificationsToElements = async () => {
+const applyModificationsToElements = async (data?: infoModif) => {
   const url = window.location.href;
 
   try {
+    let modificaciones;
     // Paso 1: Obtener la interacción
     await getEntidad(url);
     const interaccionId = await getInteraccion(url);
@@ -363,9 +397,15 @@ const applyModificationsToElements = async () => {
 
     // Paso 2: Obtener los elementos
     const elementos = await getElementos(interaccionId);
-
-    // Paso 3: Obtener las modificaciones
-    const modificaciones = await getModificaciones(interaccionId);
+    console.log(data);
+    if (data) {
+      modificaciones = data;
+      console.log("recibiendo notificaciones del socket");
+    } else {
+      // Paso 3: Obtener las modificaciones
+      modificaciones = await getModificaciones(interaccionId);
+      console.log("recibiendo notificaciones de servidor");
+    }
     console.log(modificaciones);
     const modTexto = modificaciones.texto
     const modAnotaciones = modificaciones.anotacion;
@@ -452,8 +492,71 @@ const applyModificationsToElements = async () => {
 export const setEntidadIdAndReload = async (newInteractionId: number) => {
   interaccionId = newInteractionId;
   console.log(`Entidad cambiada a: ${newInteractionId}`);
-  await applyModificationsToElements(); // Llama a la función global
+  await applyModificationsToElements(); // Llama a la función global con un argumento vacío
   console.log(`Se han añadido las modificaciones`);
+};
+
+const applyNoteToElement = (data: infoModifNota) => {
+  console.log(data.modificacionTextoId);
+
+  // Busca el elemento por el atributo data-modification-id
+  const span = document.querySelector(`[data-modification-id="${data.modificacionTextoId}"]`) as HTMLElement;
+
+  console.log("aplicando nota a elemento:", span);
+
+  if (span) {
+    addHighlightAndDeleteFeature(span, data || null);
+  } else {
+    console.error("No se encontró el elemento con data-modification-id:", data.modificacionTextoId);
+  }
+};
+
+export const openCollaborativeSocket = (interactionId: number) => {
+  if (socket) {
+    socket.close();
+    return;
+  }
+
+  console.log(`Abriendo WebSocket para la interacción: ${interactionId}`);
+
+  const wsUrl = `ws://localhost:8000/ws/interaccion/${interactionId}/`;
+
+  socket = new WebSocket(wsUrl);
+
+  socket.onopen = () => {
+    console.log('WebSocket conectado');
+  };
+
+  socket.onmessage = (event) => {
+    const message = JSON.parse(event.data);
+    console.log("Mensaje recibido del WebSocket:", message);
+    if (message.type === 'modificacion_texto') {
+      applyModificationsToElements({"texto":[message.data], "anotacion": []}); // Aplica cambios de tipo texto
+    } else if (message.type === 'modificacion_nota') {
+      applyNoteToElement(message.data); // Aplica cambios de tipo nota
+    } else if (message.type === 'delete_modification') {
+      const span = document.querySelector(`[data-modification-id="${message.data.modificacionTextoId}"]`) as HTMLElement;
+      if (span) {
+        const parent = span.parentNode;
+        if (parent) {
+          while (span.firstChild) {
+            parent.insertBefore(span.firstChild, span);
+          }
+          parent.removeChild(span);
+        }
+      } else {
+        console.error("No se encontró el elemento con data-modification-id:", message.data.modificacionTextoId);
+      }
+    }
+  };
+
+  socket.onclose = (event) => {
+    console.log('WebSocket cerrado', event);
+  };
+
+  socket.onerror = (error) => {
+    console.error('WebSocket error', error);
+  };
 };
 
 
@@ -605,21 +708,48 @@ const App = () => {
       elementoId = await createElemento(rutaDom, hashContenido);
 
       // Paso 4: Crear la modificación
-      const response = await createModificacionTexto(
-        tamanioLetra,
-        colorLetra,
-        colorFondoLetra,
-        boldChanged,
-        italicChanged,
-         underlineChanged, 
-        inicio,
-        fin,
-        textoOriginal,
-        textoModificado
-      );
+      //Si el websocket esta abierto
+      let modificationId = 0;
+      if(socket){
+        try{      
+          // Enviar datos al WebSocket
+          socket.send(JSON.stringify({
+            type: 'modificacion_texto',
+            data: {
+              interaccion: interaccionId,
+              elemento: elementoId,
+              tamaño_letra: tamanioLetra,
+              color_letra: colorLetra,
+              color_fondo_letra: colorFondoLetra,
+              bold: boldChanged,
+              italic: italicChanged,
+              underline: underlineChanged,
+              inicio,
+              fin,
+              textoModificado,
+            },
+          }));
+        } catch (error) {
+          console.error('Error enviando la modificación:', error);
+        }
+      }
+      //Si no lo esta
+      else{
+        const response = await createModificacionTexto(
+          tamanioLetra,
+          colorLetra,
+          colorFondoLetra,
+          boldChanged,
+          italicChanged,
+          underlineChanged, 
+          inicio,
+          fin,
+          textoOriginal,
+          textoModificado
+        );
 
-      const modificationId = response.id;
-
+        modificationId = response.id;
+      }
       // Añadir el ID de la modificación al span (ya creado en el frontend)
       const span = document.querySelector(`[data-temp-modification]`) as HTMLElement;
       if (span) {
@@ -661,21 +791,108 @@ const App = () => {
 
     // Contenido del menú
     menu.innerHTML = `
-      <button data-style="bold"><b>B</b></button>
-      <button data-style="italic"><i>I</i></button>
-      <button data-style="underline"><u>U</u></button>
-      <label class="color-picker-container">
-          <input type="color" id="textColorPicker" title="Color del texto">
-          <div class="color-display" id="textColorDisplay" title="Color del texto"></div>
-      </label>
-      <label class="color-picker-container">
-          <input type="color" id="bgColorPicker" title="Color de fondo">
-          <div class="color-display" id="bgColorDisplay" title="Color de fondo"></div>
-      </label>
-      <input type="number" id="fontSizePicker" min="8" max="72" value="16" title="Tamaño de letra">
-      <button id="applyChanges">✔ Aplicar</button>
-      <button id="closeMenu">❌</button>
-    `;
+  <style>
+    .menu-container {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem; /* Espaciado reducido */
+      justify-content: flex-start;
+      background-color: #f9fafb; /* Fondo claro */
+      padding: 0.3rem; /* Reducir padding */
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .menu-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px; /* Tamaño más pequeño */
+      height: 28px; /* Tamaño más pequeño */
+      background-color: #3b82f6; /* Azul principal */
+      color: white;
+      border: none;
+      border-radius: 50%; /* Botones circulares */
+      font-size: 0.9rem; /* Reducir la fuente */
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .menu-button:hover {
+      background-color: #2563eb; /* Azul oscuro */
+      transform: scale(1.1);
+    }
+
+    .menu-button.danger {
+      background-color: #ef4444; /* Rojo para cancelar */
+    }
+
+    .menu-button.danger:hover {
+      background-color: #b91c1c; /* Rojo oscuro */
+    }
+
+    .color-picker-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px; /* Tamaño más pequeño */
+      height: 28px; /* Tamaño más pequeño */
+    }
+
+    .color-picker-container input[type="color"] {
+      position: absolute;
+      opacity: 0; /* Ocultar el input real */
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .color-display {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%; /* Mostrar indicador como círculo */
+      border: 1px solid #6b7280; /* Texto gris */
+      background-color: transparent;
+      pointer-events: none; /* No interactuar directamente */
+    }
+
+    .menu-input {
+      width: 50px; /* Más pequeño */
+      height: 28px; /* Más pequeño */
+      border: 1px solid #93c5fd; /* Azul claro */
+      border-radius: 4px;
+      text-align: center;
+      font-size: 0.9rem; /* Reducir la fuente */
+      transition: box-shadow 0.2s ease;
+    }
+
+    .menu-input:focus {
+      outline: none;
+      box-shadow: 0px 0px 0px 2px #93c5fd; /* Resaltar en azul claro */
+    }
+  </style>
+  <div class="menu-container">
+    <button data-style="bold" class="menu-button" title="Negrita"><b>B</b></button>
+    <button data-style="italic" class="menu-button" title="Cursiva"><i>I</i></button>
+    <button data-style="underline" class="menu-button" title="Subrayado"><u>U</u></button>
+    
+    <label class="color-picker-container" title="Color del texto">
+      <input type="color" id="textColorPicker">
+      <div class="color-display" id="textColorDisplay"></div>
+    </label>
+    
+    <label class="color-picker-container" title="Color de fondo">
+      <input type="color" id="bgColorPicker">
+      <div class="color-display" id="bgColorDisplay"></div>
+    </label>
+    
+    <input type="number" id="fontSizePicker" class="menu-input" min="8" max="72" value="16" title="Tamaño de letra">
+    <button id="applyChanges" class="menu-button" title="Aplicar cambios">✔</button>
+    <button id="closeMenu" class="menu-button danger" title="Cerrar menú">❌</button>
+  </div>
+`;
 
     // Inicializa los valores del menú según el texto seleccionado
     const textColorPicker = menu.querySelector("#textColorPicker") as HTMLInputElement;

@@ -18,11 +18,13 @@ from .views import (
     MisInteraccionesUrlView,
     UnsubscribeView,
     ObtenerInteraccionView,
+    ObtenerEntidadInteraccionesView,
 )
 
 urlpatterns = [
     path('entidad/', CrearEntidadView.as_view(), name='crear_entidad'),
     path('entidad/<path:url>/', ObtenerEntidadView.as_view(), name='obtener_entidad'),
+    path('entidad/<path:url>/interacciones', ObtenerEntidadInteraccionesView.as_view(), name='obtener_entidad_interacciones'),
     path('crear/', CrearInteraccionView.as_view(), name='crear_interaccion'),
     path('obtener/<path:url>', ObtenerInteraccionView.as_view(), name='crear_interaccion'),
     path('compartir/', CompartirInteraccionView.as_view(), name='compartir_interaccion'),

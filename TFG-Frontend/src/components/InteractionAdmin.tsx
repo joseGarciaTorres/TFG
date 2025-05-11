@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "../utils/axiosInstance";
+import "../styles/interaction-admin-panel.css"; // Importar el archivo CSS
 
 interface Interaccion {
   id: number;
@@ -96,104 +97,101 @@ export default function InteractionAdmin({
 
   if (!interaction) return <p>Cargando interacción...</p>;
 
-  return (
-    <div className="max-w-4xl mx-auto p-6 space-y-4">
-      <h2 className="text-xl font-semibold">⚙️ Administrar Interacción</h2>
+return (
+  <div className="interaction-admin-container">
+    {/* Título */}
+    <h2 className="interaction-admin-title">⚙️ Administrar Interacción</h2>
+
+    {/* Detalles de la interacción */}
+    <div className="interaction-admin-details">
       <p>
         <strong>Entidad:</strong> {interaction.id}
       </p>
       <p>
         <strong>Total Usuarios:</strong>{" "}
-        {interaction.usuarios_visualizan.length + interaction.usuarios_visualizan.length}
+        {interaction.usuarios_visualizan.length + interaction.usuarios_realizan.length}
       </p>
-
-      {/* Lista de usuarios */}
-      <div>
-        <h3 className="text-lg font-semibold">Usuarios Suscritos:</h3>
-        {interaction.usuarios_visualizan
-          .concat(interaction.usuarios_realizan)
-          .map((userId) => (
-            <div
-              key={userId}
-              className="flex justify-between items-center bg-gray-100 p-2 rounded-lg mb-2"
-            >
-              <p>{getUserName(userId)}</p>
-              {userId !== interaction.owner && (
-                <button
-                  onClick={() => handleRemoveUser(userId)}
-                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg"
-                >
-                  Eliminar
-                </button>
-              )}
-            </div>
-          ))}
-      </div>
-
-      {/* Compartir interacción */}
-      <div>
-        <h3 className="text-lg font-semibold">Compartir Interacción:</h3>
-        {profile.friends.map((friend) => {
-          const isShared =
-            interaction.usuarios_realizan.includes(friend.id) ||
-            interaction.usuarios_visualizan.includes(friend.id);
-
-          return (
-            <div
-              key={friend.id}
-              className="flex justify-between items-center bg-gray-100 p-2 rounded-lg mb-2"
-            >
-              <p>{friend.name}</p>
-              {!isShared && (
-                <>
-                  {/* Toggle para seleccionar rol */}
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm">Rol:</label>
-                    <button
-                      onClick={() =>
-                        setRole((prevRole) =>
-                          prevRole === "visualizar" ? "editar" : "visualizar"
-                        )
-                      }
-                      className={`px-3 py-1 rounded-lg ${
-                        role === "visualizar"
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-300 text-black"
-                      }`}
-                    >
-                      {role === "visualizar" ? "Visualizar" : "Editar"}
-                    </button>
-                  </div>
-
-                  {/* Botón de compartir */}
-                  <button
-                    onClick={() => handleShare(friend.id, role)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
-                  >
-                    Compartir
-                  </button>
-                </>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Eliminar interacción */}
-      <button
-        onClick={handleDeleteInteraction}
-        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
-      >
-        Eliminar Interacción
-      </button>
-
-      {/* Volver */}
-      <button
-        onClick={onClose}
-        className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg mt-4"
-      >
-        Volver
-      </button>
     </div>
-  );
+
+    {/* Lista de usuarios */}
+    <div className="interaction-admin-users">
+      <h3 className="interaction-admin-subtitle">Usuarios Suscritos:</h3>
+      {interaction.usuarios_visualizan.concat(interaction.usuarios_realizan).map((userId) => (
+        <div key={userId} className="interaction-admin-user-item">
+          <p>{getUserName(userId)}</p>
+          {userId !== interaction.owner && (
+            <button
+              onClick={() => handleRemoveUser(userId)}
+              className="interaction-admin-remove-button"
+            >
+              Eliminar
+            </button>
+          )}
+        </div>
+      ))}
+    </div>
+
+    {/* Compartir interacción */}
+    <div className="interaction-admin-share">
+      <h3 className="interaction-admin-subtitle">Compartir Interacción:</h3>
+      {profile.friends.map((friend) => {
+        const isShared =
+          interaction.usuarios_realizan.includes(friend.id) ||
+          interaction.usuarios_visualizan.includes(friend.id);
+
+        return (
+          <div key={friend.id} className="interaction-admin-share-item">
+            <p>{friend.name}</p>
+            {!isShared && (
+              <div className="interaction-admin-share-actions">
+                {/* Toggle para seleccionar rol */}
+                <div className="interaction-admin-role-toggle">
+                  <label className="interaction-admin-role-label">Rol:</label>
+                  <button
+                    onClick={() =>
+                      setRole((prevRole) =>
+                        prevRole === "visualizar" ? "editar" : "visualizar"
+                      )
+                    }
+                    className={`interaction-admin-role-button ${
+                      role === "visualizar"
+                        ? "interaction-admin-role-visualizar"
+                        : "interaction-admin-role-editar"
+                    }`}
+                  >
+                    {role === "visualizar" ? "Visualizar" : "Editar"}
+                  </button>
+                </div>
+
+                {/* Botón de compartir */}
+                <button
+                  onClick={() => handleShare(friend.id, role)}
+                  className="interaction-admin-share-button"
+                >
+                  Compartir
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+
+    {/* Eliminar interacción */}
+    <button
+      onClick={handleDeleteInteraction}
+      className="interaction-admin-delete-button"
+    >
+      Eliminar Interacción
+    </button>
+
+    {/* Volver */}
+    <button
+      onClick={onClose}
+      className="interaction-admin-back-button"
+    >
+      Volver
+    </button>
+  </div>
+);
 }

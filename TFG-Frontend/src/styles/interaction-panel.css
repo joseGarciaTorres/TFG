@@ -1,0 +1,144 @@
+/* Variables de colores */
+:root {
+    --primary-blue: #3b82f6; /* Azul principal */
+    --primary-blue-dark: #2563eb; /* Azul oscuro */
+    --primary-blue-light: #93c5fd; /* Azul claro */
+    --danger-red: #ef4444; /* Rojo para cancelar */
+    --danger-red-dark: #b91c1c; /* Rojo oscuro */
+    --light-gray: #f9fafb; /* Fondo claro */
+    --text-gray: #6b7280; /* Texto gris */
+  }
+  
+  /* Contenedor principal del Panel de Interacciones */
+  .interaction-panel-container {
+    
+    margin-left: auto;
+    margin-right: auto;
+    width: fit-content; /* o un ancho fijo */
+    height: 100%; /* Ocupa todo el alto del sidebar */
+    display: flex;
+    flex-direction: column; /* Estructura en columna */
+    padding: 1rem;
+    background-color: var(--light-gray);
+    border-radius: 8px;
+    box-sizing: border-box; /* Incluir padding en el ancho y alto */
+    overflow: hidden; /* Evitar cualquier desbordamiento */
+  }
+  
+  /* Encabezado del panel */
+  .interaction-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    margin-left: auto;
+    margin-right: auto;
+    width: fit-content; /* o un ancho fijo */
+  }
+  
+  .interaction-panel-back-button {
+    background-color: var(--primary-blue);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-weight: bold;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    flex-shrink: 0; /* Evitar que el botón se reduzca */
+  }
+  
+  .interaction-panel-back-button:hover {
+    background-color: var(--primary-blue-dark);
+    transform: scale(1.05);
+  }
+  
+  .interaction-panel-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: var(--primary-blue-dark);
+    text-align: center;
+    flex-grow: 1; /* Expandir el título para ocupar espacio */
+  }
+  
+  /* Buscador */
+  .interaction-panel-search {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .interaction-panel-input {
+    flex-grow: 1;
+    border: 1px solid var(--primary-blue-light);
+    border-radius: 4px;
+    padding: 0.5rem;
+    font-size: 1rem;
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .interaction-panel-input:focus {
+    outline: none;
+    box-shadow: 0px 0px 0px 3px var(--primary-blue-light);
+  }
+  
+  .interaction-panel-select {
+    border: 1px solid var(--primary-blue-light);
+    border-radius: 4px;
+    padding: 0.5rem;
+    font-size: 1rem;
+    background-color: white;
+  }
+  
+  /* Listado de interacciones */
+  .interaction-panel-list {
+    flex-grow: 1; /* Expandir para ocupar el espacio restante */
+    overflow-y: auto;
+    background: white;
+    border-radius: 8px;
+    padding: 0.5rem;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .interaction-item {
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid var(--primary-blue-light);
+    background: var(--light-gray);
+    border-radius: 4px;
+  }
+  
+  /* Botones de acciones */
+  .interaction-item-admin-button {
+    background-color: var(--primary-blue);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+  }
+  
+  .interaction-item-admin-button:hover {
+    background-color: var(--primary-blue-dark);
+    transform: scale(1.05);
+  }
+  
+  .interaction-item-unsubscribe-button {
+    background-color: var(--danger-red);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+  }
+  
+  .interaction-item-unsubscribe-button:hover {
+    background-color: var(--danger-red-dark);
+    transform: scale(1.05);
+  }
+  
+  /* Mensajes vacíos */
+  .interaction-panel-empty {
+    text-align: center;
+    font-size: 1rem;
+    color: var(--text-gray);
+  }

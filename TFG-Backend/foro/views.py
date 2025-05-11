@@ -20,13 +20,9 @@ class ComentarioListView(ListCreateAPIView):
         # Obtenemos la interacción desde la URL
         interaccion_id = self.kwargs['interaccion_id']
         
-        # Encontramos el foro relacionado con esa interacción
+        # Encontramos o creamos el foro relacionado con esa interacción
         interaccion = Interaccion.objects.get(id=interaccion_id)
-        foro = interaccion.foro  # Esto obtendrá el foro si existe
-
-        # Si no existe el foro, lo creamos (opcional según el flujo de negocio)
-        if not foro:
-            foro = Foro.objects.create(interaccion=interaccion)
+        foro, _ = Foro.objects.get_or_create(interaccion=interaccion)
         
         return Comentario.objects.filter(foro=foro).order_by('fecha')
 
@@ -40,10 +36,8 @@ class ComentarioListView(ListCreateAPIView):
         except Interaccion.DoesNotExist:
             return Response({"detail": "La interacción no existe."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Verificamos si la interacción tiene un foro. Si no, lo creamos.
-        foro = interaccion.foro
-        if not foro:
-            foro = Foro.objects.create(interaccion=interaccion)
+        # Encontramos o creamos el foro relacionado con la interacción
+        foro, _ = Foro.objects.get_or_create(interaccion=interaccion)
 
         # Verificamos que el usuario esté autorizado para comentar (debe estar en usuarios_realizan o usuarios_visualizan)
         if request.user not in interaccion.usuarios_realizan.all() and request.user not in interaccion.usuarios_visualizan.all():
@@ -55,4 +49,3 @@ class ComentarioListView(ListCreateAPIView):
             serializer.save(usuario=request.user, foro=foro)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-

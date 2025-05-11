@@ -39,6 +39,17 @@ class ObtenerEntidadView(APIView):
         serializer = EntidadSerializer(entidad)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+class ObtenerEntidadInteraccionesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, url, format=None):
+        
+        interacciones = Interaccion.objects.filter(entidad__url=url)
+        serializer = InfoInteraccionSerializer(interacciones, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
 class ObtenerInteraccionView(APIView):
     permission_classes = [IsAuthenticated]
 
