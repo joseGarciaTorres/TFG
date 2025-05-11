@@ -1,0 +1,175 @@
+/* Variables de colores */
+:root {
+    --primary-blue: #3b82f6; /* Azul principal */
+    --primary-blue-dark: #2563eb; /* Azul oscuro */
+    --primary-blue-light: #93c5fd; /* Azul claro */
+    --danger-red: #ef4444; /* Rojo para eliminar */
+    --danger-red-dark: #b91c1c; /* Rojo oscuro */
+    --light-gray: #f9fafb; /* Fondo claro */
+    --text-gray: #6b7280; /* Texto gris */
+  }
+  
+  /* Contenedor principal */
+  .interaction-admin-container {
+    width: 100%; /* Ocupa todo el ancho del sidebar */
+    height: 100%; /* Ocupa todo el alto del sidebar */
+    display: flex;
+    flex-direction: column; /* Estructura en columna */
+    padding: 1rem;
+    background-color: var(--light-gray);
+    border-radius: 8px;
+    box-sizing: border-box; /* Incluir padding en el ancho y alto */
+    overflow-y: auto; /* Scroll vertical si es necesario */
+  }
+  
+  /* Título */
+  .interaction-admin-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-blue-dark);
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  /* Detalles de la interacción */
+  .interaction-admin-details {
+    margin-bottom: 1rem;
+    font-size: 1rem;
+  }
+  
+  .interaction-admin-details p {
+    margin-bottom: 0.5rem;
+    color: var(--text-gray);
+  }
+  
+  /* Usuarios suscritos */
+  .interaction-admin-users {
+    margin-bottom: 1.5rem;
+  }
+  
+  .interaction-admin-subtitle {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: var(--primary-blue-dark);
+    margin-bottom: 0.5rem;
+  }
+  
+  .interaction-admin-user-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .interaction-admin-remove-button {
+    background-color: var(--danger-red);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+  }
+  
+  .interaction-admin-remove-button:hover {
+    background-color: var(--danger-red-dark);
+    transform: scale(1.05);
+  }
+  
+  /* Compartir interacción */
+  .interaction-admin-share {
+    margin-bottom: 1.5rem;
+  }
+  
+  .interaction-admin-share-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .interaction-admin-share-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  
+  .interaction-admin-role-toggle {
+    display: flex;
+    align-items: center;
+  }
+  
+  .interaction-admin-role-label {
+    font-size: 0.875rem;
+    margin-right: 0.25rem;
+    color: var(--text-gray);
+  }
+  
+  .interaction-admin-role-button {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+  }
+  
+  .interaction-admin-role-visualizar {
+    background-color: var(--primary-blue);
+    color: white;
+  }
+  
+  .interaction-admin-role-editar {
+    background-color: var(--primary-blue-light);
+    color: var(--primary-blue-dark);
+  }
+  
+  .interaction-admin-share-button {
+    background-color: var(--primary-blue);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+  }
+  
+  .interaction-admin-share-button:hover {
+    background-color: var(--primary-blue-dark);
+    transform: scale(1.05);
+  }
+  
+  /* Botón de eliminar interacción */
+  .interaction-admin-delete-button {
+    background-color: var(--danger-red);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+  }
+  
+  .interaction-admin-delete-button:hover {
+    background-color: var(--danger-red-dark);
+    transform: scale(1.05);
+  }
+  
+  /* Botón para volver */
+  .interaction-admin-back-button {
+    background-color: var(--primary-blue);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+  }
+  
+  .interaction-admin-back-button:hover {
+    background-color: var(--primary-blue-dark);
+    transform: scale(1.05);
+  }

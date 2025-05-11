@@ -43,6 +43,8 @@ class User(AbstractBaseUser):
       unique=True,
   )
   name = models.CharField(max_length=200)
+  first_name = models.CharField(max_length=100, null=True, blank=True)
+  last_name = models.CharField(max_length=100, null=True, blank=True)
   tc = models.BooleanField()
   is_active = models.BooleanField(default=True)
   is_admin = models.BooleanField(default=False)

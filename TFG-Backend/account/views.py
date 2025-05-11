@@ -1,12 +1,15 @@
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from account.serializers import AcceptFriendRequestSerializer, CancelFriendRequestSerializer, DeleteFriendRequestSerializer, FriendRequest, FriendRequestListSerializer, FriendRequestSerializer, RemoveFriendSerializer, SendPasswordResetEmailSerializer, UserChangePasswordSerializer, UserLoginSerializer, UserProfileSerializer, UserPasswordResetSerializer, UserRegistrationSerializer
+from account.serializers import AcceptFriendRequestSerializer, CancelFriendRequestSerializer, DeleteFriendRequestSerializer, FriendRequest, FriendRequestListSerializer, FriendRequestSerializer, RemoveFriendSerializer, SendPasswordResetEmailSerializer, UserChangePasswordSerializer, UserLoginSerializer, UserProfileSerializer, UserPasswordResetSerializer, UserRegistrationSerializer, UserSearchSerializer
 from account.renderers import UserRenderer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from .models import FriendRequest
+from django.db.models import Q
+from .models import User
+
 
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
@@ -120,3 +123,43 @@ class FriendRequestListView(APIView):
         frequests = FriendRequest.objects.filter(to_user=request.user)
         serializer =  FriendRequestListSerializer(frequests, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+# Muestra todos los usuarios si no hay filtros
+# Excluye al usuario autenticado de los resultados
+# Permite filtrar por name, email, first_name, last_name
+# Si se pasa ?friends_in_common=true, muestra solo quienes tienen algún amigo en común con el usuario logueado
+class UserSearchView(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request):
+        user = request.user if request.user.is_authenticated else None
+        query_params = request.query_params
+
+        name = query_params.get('name')
+        email = query_params.get('email')
+        first_name = query_params.get('first_name')
+        last_name = query_params.get('last_name')
+        friends_in_common = query_params.get('friends_in_common', '').lower() == 'true'
+
+        queryset = User.objects.all()
+
+        if user:
+            queryset = queryset.exclude(id=user.id)
+
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+        if email:
+            queryset = queryset.filter(email__icontains=email)
+        if first_name:
+            queryset = queryset.filter(first_name__icontains=first_name)
+        if last_name:
+            queryset = queryset.filter(last_name__icontains=last_name)
+
+        if user and friends_in_common:
+            user_friends = user.friends.all()
+            queryset = queryset.filter(friends__in=user_friends).distinct()
+
+        serializer = UserSearchSerializer(queryset, many=True)
+        return Response(serializer.data)

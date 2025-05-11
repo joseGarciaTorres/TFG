@@ -40,8 +40,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
-    "corsheaders",
+    'django_filters',
+    'channels',
+    'corsheaders',
     'account',
+    'interaction',
+    'foro',
+    'modification',
 ]
 
 MIDDLEWARE = [
@@ -54,6 +59,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
 
 ROOT_URLCONF = 'BackTFG.urls'
 
@@ -185,3 +193,15 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 PASSWORD_RESET_TIMEOUT = 900
+
+
+ASGI_APPLICATION = 'BackTFG.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],  # Cambia si Redis está en otro host
+        },
+    },
+}
