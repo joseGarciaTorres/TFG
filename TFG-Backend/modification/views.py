@@ -76,10 +76,44 @@ class CrearModificacionAnotacionView(APIView):
         user = request.user
         data = request.data.copy()
 
-        error_response, interaccion, elemento = validar_interaccion_y_elemento(data, user)
-        if error_response:
-            return error_response
-        
+        # Validar que la interacción existe
+        try:
+            interaccion = Interaccion.objects.get(id=data['interaccion'])
+        except Interaccion.DoesNotExist:
+            return Response({"error": "Interacción no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Verificar si el usuario tiene acceso a la interacción
+        tiene_acceso = (
+            not interaccion.privado or
+            interaccion.usuarios_visualizan.filter(id=user.id).exists() or
+            interaccion.usuarios_realizan.filter(id=user.id).exists() or
+            InteraccionCompartida.objects.filter(interaccion=interaccion, compartido_con=user).exists()
+        )
+
+        if not tiene_acceso:
+            return Response({"error": "No tienes acceso a esta interacción."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Obtener el elemento relacionado desde la modificación de tipo texto
+        try:
+            modificacion_texto = ModificacionTexto.objects.get(id=data.get('modificacionTextoId'))
+            elemento = modificacion_texto.elemento
+        except ModificacionTexto.DoesNotExist:
+            return Response({"error": "Modificación de tipo texto no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Verificar si ya existe una modificación de tipo anotación con el mismo modificacionTextoId
+        existing_anotacion = ModificacionAnotacion.objects.filter(modificacionTextoId=data.get('modificacionTextoId')).first()
+
+        if existing_anotacion:
+            # Actualizar el contenido de la anotación existente
+            existing_anotacion.contenido = data.get('contenido', existing_anotacion.contenido)
+            existing_anotacion.save()
+
+            return Response({
+                "msg": "Modificación de anotación actualizada correctamente.",
+                "modificacion": ModificacionAnotacionSerializer(existing_anotacion).data
+            }, status=status.HTTP_200_OK)
+
+        # Crear nueva anotación si no existe
         serializer = ModificacionAnotacionSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         modificacion = serializer.save(interaccion=interaccion, elemento=elemento)

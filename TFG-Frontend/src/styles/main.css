@@ -1,39 +1,153 @@
-.main-screen {
-    padding: 20px;
-    max-width: 600px;
-    margin: auto;
-    font-family: sans-serif;
-  }
-  
-  .profile-card,
-  .search-section,
-  .requests-section,
-  .result-card,
-  .request-card {
-    border: 1px solid #ccc;
-    border-radius: 12px;
-    padding: 15px;
-    margin: 15px 0;
-    background: #f9f9f9;
-  }
-  
-  input {
-    padding: 8px;
-    margin-right: 10px;
-    width: 60%;
-  }
-  
-  button {
-    padding: 6px 12px;
-    margin: 5px;
-    cursor: pointer;
-    border: none;
-    background-color: #3b82f6;
-    color: white;
-    border-radius: 6px;
-  }
-  
-  button:hover {
-    background-color: #2563eb;
-  }
-  
+/* Variables de colores */
+:root {
+  --primary-blue: #3b82f6;
+  --primary-blue-dark: #2563eb;
+  --primary-blue-light: #93c5fd;
+  --danger-red: #ef4444;
+  --danger-red-dark: #b91c1c;
+  --light-gray: #f9fafb;
+  --text-gray: #6b7280;
+}
+
+/* Contenedor principal */
+.main-screen-container {
+  width: 100%;
+  height: 100vh;
+  padding: 1rem;
+  background-color: var(--light-gray);
+  overflow-y: auto; /* Habilitar desplazamiento vertical */
+  box-sizing: border-box;
+}
+
+/* Perfil del usuario */
+.profile-section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Sección de búsqueda */
+.search-section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.search-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.search-select,
+.search-input {
+  border: 1px solid var(--primary-blue-light);
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-size: 1rem;
+  flex-grow: 1;
+}
+
+.search-input:focus {
+  outline: none;
+  box-shadow: 0px 0px 0px 3px var(--primary-blue-light);
+}
+
+.search-button {
+  background-color: var(--primary-blue);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: bold;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.search-button:hover {
+  background-color: var(--primary-blue-dark);
+  transform: scale(1.05);
+}
+
+.search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--light-gray);
+  border-radius: 4px;
+  padding: 0.75rem;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.result-button {
+  background-color: var(--primary-blue);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: bold;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.result-button:hover {
+  background-color: var(--primary-blue-dark);
+  transform: scale(1.05);
+}
+
+/* Solicitudes recibidas */
+.requests-section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.request-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--light-gray);
+  border-radius: 4px;
+  padding: 0.75rem;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0.5rem;
+}
+
+.accept-button,
+.reject-button {
+  background-color: var(--primary-blue);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: bold;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.accept-button:hover {
+  background-color: var(--primary-blue-dark);
+  transform: scale(1.05);
+}
+
+.reject-button {
+  background-color: var(--danger-red);
+}
+
+.reject-button:hover {
+  background-color: var(--danger-red-dark);
+  transform: scale(1.05);
+}
+
+/* Mensaje vacío */
+.empty-message {
+  text-align: center;
+  color: var(--text-gray);
+  font-size: 1rem;
+}

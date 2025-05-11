@@ -2,6 +2,8 @@ from rest_framework import serializers
 from .models import Comentario
 
 class ComentarioSerializer(serializers.ModelSerializer):
+    usuario = serializers.CharField(source='usuario.name', read_only=True)  # Devuelve el campo `name` del usuario
+
     class Meta:
         model = Comentario
         fields = ['id', 'foro', 'usuario', 'contenido', 'fecha', 'comentario_padre']

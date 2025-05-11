@@ -32,10 +32,17 @@ class UserLoginSerializer(serializers.ModelSerializer):
     model = User
     fields = ['email', 'password']
 
+class FriendSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'name']
+
 class UserProfileSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = User
-    fields = ['id', 'email', 'name', 'first_name', 'last_name', 'profile_image', 'friends']
+    friends = FriendSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'name', 'first_name', 'last_name', 'profile_image', 'friends']
 
 class UserSearchSerializer(serializers.ModelSerializer):
   class Meta:

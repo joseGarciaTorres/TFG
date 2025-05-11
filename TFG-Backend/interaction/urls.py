@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import (
-    ObtenerCrearEntidadView,
+    CrearEntidadView,
+    ObtenerEntidadView,
     CrearInteraccionView,
     CompartirInteraccionView,
     VerInteraccionView,
@@ -13,14 +14,25 @@ from .views import (
     UnirseInteraccionPublicaView,
     EliminarUsuariosDeInteraccionView,
     InteraccionesPorUsuarioView,
+    MisInteraccionesView,
+    MisInteraccionesUrlView,
+    UnsubscribeView,
+    ObtenerInteraccionView,
+    ObtenerEntidadInteraccionesView,
 )
 
 urlpatterns = [
-    path('entidad/', ObtenerCrearEntidadView.as_view(), name='obtener_crear_entidad'),
+    path('entidad/', CrearEntidadView.as_view(), name='crear_entidad'),
+    path('entidad/<path:url>/', ObtenerEntidadView.as_view(), name='obtener_entidad'),
+    path('entidad/<path:url>/interacciones', ObtenerEntidadInteraccionesView.as_view(), name='obtener_entidad_interacciones'),
     path('crear/', CrearInteraccionView.as_view(), name='crear_interaccion'),
+    path('obtener/<path:url>', ObtenerInteraccionView.as_view(), name='crear_interaccion'),
     path('compartir/', CompartirInteraccionView.as_view(), name='compartir_interaccion'),
     path('unirse/', UnirseInteraccionPublicaView.as_view(), name='unirse_interaccion'),
     path('<int:interaccion_id>/', VerInteraccionView.as_view(), name='ver_interaccion'),
+    path('misInteracciones/', MisInteraccionesView.as_view(), name='ver_interaccion_user'),
+    path('misInteracciones/<path:url>/', MisInteraccionesUrlView.as_view(), name='ver_interaccion_user_url'),
+    path('<int:interaccion_id>/unsubscribe/', UnsubscribeView.as_view(), name='Desubscribirse_de_interaccion'),
     path('<int:interaccion_id>/elementos/', ElementosDeInteraccionView.as_view(), name='elementos_interaccion'),
     path('<int:interaccion_id>/eliminar-comparticion/<int:compartido_con_id>/', EliminarComparticionView.as_view()),
     path('<int:interaccion_id>/eliminar-usuarios/', EliminarUsuariosDeInteraccionView.as_view()),
