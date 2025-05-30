@@ -10,7 +10,7 @@ import axios, {
   }
   
   const instance = axios.create({
-    baseURL: 'http://localhost:8000/api/',
+    baseURL: 'https://backjosetfg.com/api/',
   })
   
   // Interceptor de requests
@@ -43,7 +43,7 @@ import axios, {
         if (refresh) {
           try {
             const res = await axios.post<RefreshResponse>(
-              'http://localhost:8000/api/user/token/refresh/',
+              'https://backjosetfg.com/api/user/token/refresh/',
               { refresh }
             )
   

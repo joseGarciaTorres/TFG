@@ -341,12 +341,14 @@ export default function MainScreen() {
                 {currentInteractionId === interaction.id ? (
                   <>
                   <span className="active-status">Visualizando</span>
-                  <button
-                    onClick={() => openCollaborativeSocket(interaction.id)}
-                    className="collaboration-button"
-                  >
-                    Función colaborativa
-                  </button>
+                  {interaction.usuarios_realizan.includes(profile.id) && (
+                    <button
+                      onClick={() => openCollaborativeSocket(interaction.id)}
+                      className="collaboration-button"
+                    >
+                      Función colaborativa
+                    </button>
+                  )}
                   </>
                 ) : (
                   <button

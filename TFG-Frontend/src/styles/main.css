@@ -11,12 +11,8 @@
 
 /* Contenedor principal */
 .main-screen-container {
-  width: 100%;
-  height: 100vh;
-  padding: 1rem;
-  background-color: var(--light-gray);
-  overflow-y: auto; /* Habilitar desplazamiento vertical */
-  box-sizing: border-box;
+  flex: 1; /* Ocupa el espacio disponible */
+  overflow-y: auto;
 }
 
 /* Perfil del usuario */

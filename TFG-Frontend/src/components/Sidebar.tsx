@@ -17,8 +17,8 @@ const SidebarContent = ({ onLogin, isLoggedIn }: SidebarProps) => {
   if (isAuthenticated || isLoggedIn) {
     return (
       <div className="sidebar">
-        <MainScreen />
         <button onClick={logout}>Cerrar sesión</button>
+        <MainScreen />
       </div>
     )
   }
