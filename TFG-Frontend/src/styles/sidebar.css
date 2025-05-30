@@ -1,13 +1,16 @@
 .sidebar {
-    padding: 2rem;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.5rem;
-    background-color: #ffffff;
-    min-height: 100vh;
-  }
+  padding: 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; /* Usa todo el ancho disponible */
+  gap: 1.5rem;
+  background-color: #ffffff;
+  height: 100vh; /* Cambiar min-height por height */
+  overflow-y: auto; /* Permite scroll si el contenido excede */
+  box-sizing: border-box;
+}
+
   
   .auth-form {
     width: 100%;
@@ -33,15 +36,14 @@
     color: #333;
   }
   
+  
   .auth-form button {
-    padding: 0.75rem;
-    font-weight: bold;
-    background-color: #3b82f6;
+    background-color: var(--primary-blue);
     color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.2s;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.2s ease, transform 0.2s ease;
   }
   
   .auth-form button:hover {
