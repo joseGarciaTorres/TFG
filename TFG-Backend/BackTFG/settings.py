@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-_6-5&b*rw)qw8ax-su&$)(un2l(1#v2#qp=6lj1pj)bunovm!g
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['16.171.113.96', 'localhost', 'backjosetfg.com', 'www.backjosetfg.com']
 
 
 # Application definition
@@ -94,7 +94,7 @@ DATABASES = {
         'USER': 'postgres',
         'PASSWORD': '2300',
         'HOST': 'localhost',  # o la dirección IP del servidor de PostgreSQL
-        'PORT': '',  # Déjalo vacío para el puerto predeterminado
+        'PORT': '5432',  # Déjalo vacío para el puerto predeterminado
     }
 }
 
@@ -133,7 +133,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = os.path.join(BASE_DIR, 'static/')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
