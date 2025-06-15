@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "../utils/axiosInstance";
 import InteractionAdmin from "./InteractionAdmin";
 import "../styles/interaction-panel.css"; // Importar el archivo CSS
+import "../styles/main.css"; // Importar estilos globales
 
 
 interface Interaccion {
@@ -42,9 +43,11 @@ export default function InteractionPanel({ profile, onClose }: InteractionPanelP
     "all"
   );
   const [adminInteractionId, setAdminInteractionId] = useState<number | null>(null);
+  const [adminUrl, setAdminUrl] = useState<string | null>("");
 
-  const openAdminPanel = (interactionId: number) => {
+  const openAdminPanel = (interactionId: number, url: string) => {
     setAdminInteractionId(interactionId); // Abre el panel de administración
+    setAdminUrl(url);
   };
 
   const closeAdminPanel = () => {
@@ -85,24 +88,25 @@ export default function InteractionPanel({ profile, onClose }: InteractionPanelP
       <InteractionAdmin
         profile={profile}
         interactionId={adminInteractionId}
+        url = {adminUrl || ""}
         onClose={closeAdminPanel}
       />
     );
   }
 
 return (
-  <div className="interaction-panel-container">
+  <div className='main-section'>
     {/* Botón para volver a MainScreen */}
-    <div className="interaction-panel-header">
-      <button onClick={onClose} className="interaction-panel-back-button">
-        ⬅️ Volver a MainScreen
-      </button>
-    </div>
+    <br />
+      <div className="interaction-panel-header">
+        <button onClick={onClose} className="back-button">
+          Menu
+        </button>
+      </div>
+    
+      <h2 className="interaction-panel-title">Panel de Interacciones</h2>
 
-    <div className="interaction-panel-header">
-      <h2 className="interaction-panel-title">🧩 Panel de Interacciones</h2>
-    </div>
-
+    <div className='search-section'>
     {/* Buscador */}
     <div className="interaction-panel-search">
       <input
@@ -128,23 +132,22 @@ return (
     </div>
 
     {/* Listado de Interacciones */}
-    <div className="interaction-panel-list">
       {searchedInteracciones.length === 0 ? (
         <p className="interaction-panel-empty">No se encontraron interacciones.</p>
       ) : (
         searchedInteracciones.map((interaccion) => (
           <div key={interaccion.id} className="interaction-item">
-            <p>
-              <strong>Entidad:</strong>{" "}
+            <p className="inline-block-p">
+              <strong>Pagina web:</strong>{" "}
               {interaccion.entidad.length > 30
                 ? `${interaccion.entidad.slice(0, 30)}...`
                 : interaccion.entidad}
             </p>
-            <p>
-              <strong>Total Usuarios:</strong>{" "}
-              {interaccion.numero_usuarios_visualizan + interaccion.numero_usuarios_editan}
+            <p className="inline-block-p">
+            <strong>Total Usuarios:</strong>{" "}
+            {interaccion.usuarios_realizan.length + interaccion.usuarios_visualizan.length}
             </p>
-            <p>
+            <p className="inline-block-p">
               <strong>Rol:</strong>{" "}
               {interaccion.owner === profile.id
                 ? "Propietario"
@@ -154,19 +157,25 @@ return (
             </p>
 
             {interaccion.owner === profile.id ? (
-              <button
-                onClick={() => openAdminPanel(interaccion.id)}
-                className="interaction-item-admin-button"
-              >
-                Administrar
-              </button>
+              <>
+                <span style={{ display: "inline-block", width: "10px" }}></span>
+                <button
+                  onClick={() => openAdminPanel(interaccion.id, interaccion.entidad)}
+                  className="search-button"
+                >
+                  Administrar
+                </button>
+              </>
             ) : (
-              <button
-                onClick={() => alert("Anular suscripción.")}
-                className="interaction-item-unsubscribe-button"
-              >
-                Anular suscripción
-              </button>
+              <>
+                <span style={{ display: "inline-block", width: "10px" }}></span>
+                <button
+                  onClick={() => alert("Anular suscripción.")}
+                  className="cancel-button"
+                >
+                  Anular suscripción
+                </button>
+              </>
             )}
           </div>
         ))

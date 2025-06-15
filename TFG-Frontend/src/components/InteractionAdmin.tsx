@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "../utils/axiosInstance";
 import "../styles/interaction-admin-panel.css"; // Importar el archivo CSS
+import "../styles/main.css"; // Importar estilos globales
 
 interface Interaccion {
   id: number;
@@ -30,12 +31,14 @@ interface infoFriends {
 interface InteractionAdminProps {
   profile: UserProfile;
   interactionId: number;
+  url: string; // URL de la interacción
   onClose: () => void;
 }
 
 export default function InteractionAdmin({
   profile,
   interactionId,
+  url,
   onClose,
 }: InteractionAdminProps) {
   const [interaction, setInteraction] = useState<Interaccion | null>(null);
@@ -95,21 +98,47 @@ export default function InteractionAdmin({
     return friend ? friend.name : `Usuario ${userId}`;
   };
 
+  const cambiarVisibilidad = async () => {
+    try {
+      await axios.put(`/interaction/${interactionId}/cambiar-visibilidad/`);
+      if (interaction) {
+        interaction.privado = !interaction.privado; // Cambia el estado local
+      }
+    } catch (error) {
+      console.error("Error al cambiar la visibilidad:", error);
+    }
+  };
+
   if (!interaction) return <p>Cargando interacción...</p>;
 
 return (
-  <div className="interaction-admin-container">
+  <div className="main-section">
+    <br />
+      <div className="interaction-panel-header">
+        <button onClick={onClose} className="back-button">
+          Volver
+        </button>
+      </div>
     {/* Título */}
-    <h2 className="interaction-admin-title">⚙️ Administrar Interacción</h2>
-
+    <h2 className="interaction-admin-title">Administrar Interacción</h2>
+    <div className="search-section">
     {/* Detalles de la interacción */}
-    <div className="interaction-admin-details">
-      <p>
-        <strong>Entidad:</strong> {interaction.id}
-      </p>
-      <p>
+    <div className="interaction-item">
+    <p className="inline-block-p">
+      <strong>URL:</strong>{" "}
+      <a href={url} target="_blank" rel="noopener noreferrer">
+        {url}
+      </a>
+    </p>
+      <p className="inline-block-p">
         <strong>Total Usuarios:</strong>{" "}
         {interaction.usuarios_visualizan.length + interaction.usuarios_realizan.length}
+      </p>
+      <p className="inline-block-p">
+        <strong>Interacción {interaction.privado ? "Privada" : "Publica"} </strong>
+        <button onClick={cambiarVisibilidad} className="search-button">
+        Cambiar Visibilidad
+      </button>
       </p>
     </div>
 
@@ -118,11 +147,20 @@ return (
       <h3 className="interaction-admin-subtitle">Usuarios Suscritos:</h3>
       {interaction.usuarios_visualizan.concat(interaction.usuarios_realizan).map((userId) => (
         <div key={userId} className="interaction-admin-user-item">
-          <p>{getUserName(userId)}</p>
+          <p className="inline-block-p">
+            {getUserName(userId)} -{" "}
+            {userId === interaction.owner
+              ? "Propietario"
+              : interaction.usuarios_realizan.includes(userId)
+              ? "Editor"
+              : interaction.usuarios_visualizan.includes(userId)
+              ? "Visualizador"
+              : "Sin rol"}
+          </p>
           {userId !== interaction.owner && (
             <button
               onClick={() => handleRemoveUser(userId)}
-              className="interaction-admin-remove-button"
+              className="cancel-button"
             >
               Eliminar
             </button>
@@ -166,7 +204,7 @@ return (
                 {/* Botón de compartir */}
                 <button
                   onClick={() => handleShare(friend.id, role)}
-                  className="interaction-admin-share-button"
+                  className="search-button"
                 >
                   Compartir
                 </button>
@@ -180,18 +218,11 @@ return (
     {/* Eliminar interacción */}
     <button
       onClick={handleDeleteInteraction}
-      className="interaction-admin-delete-button"
+      className="cancel-button"
     >
       Eliminar Interacción
     </button>
-
-    {/* Volver */}
-    <button
-      onClick={onClose}
-      className="interaction-admin-back-button"
-    >
-      Volver
-    </button>
+      </div>
   </div>
 );
 }

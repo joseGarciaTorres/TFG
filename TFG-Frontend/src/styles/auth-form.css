@@ -1,0 +1,63 @@
+/* auth-form.css */
+
+/* Fondo del formulario */
+.auth-form {
+    background-color: #29C8F0; /* Color de fondo basado en la paleta */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Sombra del formulario */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 400px; /* Ancho máximo del formulario */
+    margin: 0 auto; /* Centrar el formulario horizontalmente */
+    box-sizing: border-box;
+  }
+  
+  /* Títulos del formulario */
+  .auth-form h2 {
+    color: #4A4A4A; /* Color del texto */
+    margin-bottom: 20px;
+  }
+  
+  /* Campos de entrada */
+  .auth-form input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+  
+  /* Botón con efecto de sombra */
+  .shadow-effect {
+    border: none;
+    color: white;
+    padding: 14px 28px;
+    cursor: pointer;
+    border-radius: 5px;
+    background-color: #023047; /* Color base del botón */
+    transition: box-shadow 0.3s ease-in-out; /* Transición suave del efecto de sombra */
+  }
+  
+  .shadow-effect:hover {
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3); /* Aumenta el desplazamiento y la opacidad de la sombra */
+  }
+  
+  .shadow-effect:disabled {
+    background-color: #FFB703; /* Color del botón deshabilitado */
+    cursor: not-allowed;
+  }
+
+  .search-button {
+    background-color: #FFB703;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    border: none;
+  }
