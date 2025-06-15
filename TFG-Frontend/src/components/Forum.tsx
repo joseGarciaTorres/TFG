@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "../utils/axiosInstance";
 import "../styles/forum.css"; // Importar el archivo CSS
+import "../styles/main.css";
 
 interface Comment {
   id: number;
@@ -87,7 +88,7 @@ const Forum: React.FC<ForumProps> = ({ interactionId, onBack }) => {
           {comment.comentario_padre === null && (
             <button
               onClick={() => setReplyTo(comment.id)}
-              className="comment-reply-button"
+              className="search-button"
             >
               Responder
             </button>
@@ -99,18 +100,21 @@ const Forum: React.FC<ForumProps> = ({ interactionId, onBack }) => {
   };
 
   return (
-    <div className="forum-container">
-      <button onClick={onBack} className="forum-back-button">
-        ⬅️ Volver
-      </button>
-      <h2 className="forum-title">💬 Foro de la Interacción #{interactionId}</h2>
+    <div className='main-section'>
+      <br />
+      <div className="interaction-panel-header">
+        <button onClick={onBack} className="back-button">
+          Menu
+        </button>
+      </div>
+      <h2 className="forum-title"> Foro de la Interacción</h2>
 
       {loading ? (
         <p className="forum-loading">Cargando comentarios...</p>
       ) : error ? (
         <p className="forum-error">{error}</p>
       ) : (
-        <div className="forum-comments-container">
+        <div className='search-section'>
           {comments.length > 0 ? (
             renderComments(null) // Renderizar los comentarios de nivel superior
           ) : (
@@ -120,14 +124,14 @@ const Forum: React.FC<ForumProps> = ({ interactionId, onBack }) => {
       )}
 
       {/* Campo para publicar un nuevo comentario */}
-      <div className="forum-new-comment">
+      <div className="search-section">
         {replyTo && (
-          <div className="forum-reply-notification">
+          <div className="interaction-item">
             <p>
               Respondiendo a comentario #{replyTo}{" "}
               <button
                 onClick={() => setReplyTo(null)}
-                className="forum-reply-cancel"
+                className="cancel-button"
               >
                 Cancelar
               </button>
@@ -140,9 +144,11 @@ const Forum: React.FC<ForumProps> = ({ interactionId, onBack }) => {
           onChange={(e) => setNewComment(e.target.value)}
           className="forum-textarea"
         />
-        <button onClick={handlePostComment} className="forum-submit-button">
-          Publicar
-        </button>
+        <div className="interaction-panel-header">
+          <button onClick={handlePostComment} className="forum-submit-button">
+            Publicar
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -42,7 +42,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'name', 'first_name', 'last_name', 'profile_image', 'friends']
+        fields = ['id', 'email', 'name', 'first_name', 'last_name', 'profile_image', 'friends', 'bio']
 
 class UserSearchSerializer(serializers.ModelSerializer):
   class Meta:

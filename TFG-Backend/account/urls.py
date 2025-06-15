@@ -5,7 +5,7 @@ from account.views import (
     UserPasswordResetView, SendFriendRequestView, 
     AcceptFriendRequestView, CancelFriendRequestView,
     DeleteFriendRequestView, RemoveFriendView, FriendRequestListView, 
-    UserSearchView
+    UserSearchView, GoogleUserView, ExpecificUserProfileView
 )
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -13,6 +13,7 @@ urlpatterns = [
     path('register/',UserRegistrationView.as_view(),name="register"),
     path('login/',UserLoginView.as_view(),name="login"),
     path('profile/', UserProfileView.as_view(), name='profile'),
+    path('profile/<int:user_id>/', ExpecificUserProfileView.as_view(), name='expecific_profile'),
     path('changepassword/', UserChangePasswordView.as_view(), name='changepassword'),
     path('send-reset-password-email/', SendPasswordResetEmailView.as_view(), name='send-reset-password-email'),
     path('reset-password/<uid>/<token>/', UserPasswordResetView.as_view(), name='reset-password'),
@@ -24,5 +25,5 @@ urlpatterns = [
     path('friend/remove/', RemoveFriendView.as_view(), name='remove_friend'),
     path('friend-request/list/', FriendRequestListView.as_view(), name='list_friend_requests'),
     path('profile/search/', UserSearchView.as_view(), name='buscar-usuarios'),
-
+    path('google/', GoogleUserView.as_view(), name='login-google-usuarios'),
 ]

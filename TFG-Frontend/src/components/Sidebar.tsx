@@ -4,6 +4,7 @@ import RegisterForm from './RegisterForm'
 import MainScreen from '../components/MainScreen'
 import { AuthProvider, useAuth } from '../context/AuthContext'
 import '../styles/sidebar.css'
+import '../styles/auth-form.css'
 
 interface SidebarProps {
   onLogin: () => void;
@@ -17,8 +18,8 @@ const SidebarContent = ({ onLogin, isLoggedIn }: SidebarProps) => {
   if (isAuthenticated || isLoggedIn) {
     return (
       <div className="sidebar">
+        <button onClick={logout} className="shadow-effect">Cerrar sesión</button>
         <MainScreen />
-        <button onClick={logout}>Cerrar sesión</button>
       </div>
     )
   }
@@ -26,7 +27,7 @@ const SidebarContent = ({ onLogin, isLoggedIn }: SidebarProps) => {
   return (
     <div className="sidebar">
       {isLogin ? <LoginForm onLogin={onLogin} /> : <RegisterForm />}
-      <button onClick={() => setIsLogin(!isLogin)} className="toggle-btn">
+      <button onClick={() => setIsLogin(!isLogin)} className="shadow-effect">
         {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
       </button>
     </div>

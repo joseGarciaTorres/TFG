@@ -1,3 +1,56 @@
+// const path = require('path');
+
+// module.exports = {
+//   mode: 'production', // Cambiar a 'production' para optimizar el código
+//   entry: {
+//     content: './src/content/content.tsx', // Entrada para el content script
+//     popup: './src/popup/Popup.tsx', // Entrada para el popup
+//   },
+//   output: {
+//     path: path.resolve(__dirname, 'dist'),
+//     filename: '[name].js', // Genera un archivo por cada entrada (content.js, popup.js)
+//     devtoolModuleFilenameTemplate: '[resource-path]', // Para evitar eval()
+//   },
+//   resolve: {
+//     extensions: ['.js', '.jsx', '.ts', '.tsx'], // Extensiones que Webpack resolverá
+//   },
+//   module: {
+//     rules: [
+//       {
+//         test: /\.tsx?$/,
+//         use: [
+//           {
+//             loader: 'babel-loader',
+//             options: {
+//               presets: ['@babel/preset-env', '@babel/preset-react'], // Soporte para React y ES6+
+//             },
+//           },
+//           'ts-loader', // Transpila TypeScript
+//         ],
+//         exclude: /node_modules/,
+//       },
+//       {
+//         test: /\.jsx?$/,
+//         use: [
+//           {
+//             loader: 'babel-loader',
+//             options: {
+//               presets: ['@babel/preset-env', '@babel/preset-react'], // Soporte para React y ES6+
+//             },
+//           },
+//         ],
+//         exclude: /node_modules/,
+//       },
+//       {
+//         test: /\.css$/i,
+//         use: ['style-loader', 'css-loader'], // Soporte para CSS
+//       },
+//     ],
+//   },
+//   devtool: 'source-map', // Usa source maps para depuración
+// };
+
+
 const path = require('path');
 
 module.exports = {

@@ -60,9 +60,14 @@ interface infoModif{
 }
 
 export let entidadId: number | null = null;
+let canWrite: boolean = true; // Variable para indicar si el usuario es el propietario de la interacción
 let interaccionId: number | null = null;
 let elementoId: number | null = null;
 let socket: WebSocket | null = null;
+let isContent: boolean = (() => {
+  const savedState = localStorage.getItem("isContent");
+  return savedState !== null ? JSON.parse(savedState) : false; // Por defecto, true
+})();
 
 const getEntidad = async (url: string): Promise<number> => {
   console.log(entidadId);
@@ -487,13 +492,47 @@ const applyModificationsToElements = async (data?: infoModif) => {
   }
 };
 
+const removeModificationsFromDOM = () => {
+  // Selecciona todos los elementos <span> con el atributo "data-modification-id"
+  const elements = document.querySelectorAll('span[data-modification-id]');
+
+  // Recorre los elementos y reemplaza cada <span> por su contenido de texto
+  elements.forEach((element) => {
+    const parent = element.parentNode;
+    while (element.firstChild) {
+      parent?.insertBefore(element.firstChild, element); // Mueve los hijos del <span> al padre
+    }
+    parent?.removeChild(element); // Elimina el <span>
+  });
+
+  console.log(`Se han eliminado ${elements.length} modificaciones del DOM.`);
+};
 
 // Función para cambiar el `entidadId` y recargar modificaciones
-export const setEntidadIdAndReload = async (newInteractionId: number) => {
+export const setEntidadIdAndReload = async (newInteractionId: number, wr: boolean) => {
   interaccionId = newInteractionId;
-  console.log(`Entidad cambiada a: ${newInteractionId}`);
-  await applyModificationsToElements(); // Llama a la función global con un argumento vacío
-  console.log(`Se han añadido las modificaciones`);
+  removeModificationsFromDOM();
+  canWrite = wr; // Actualiza el estado de escritura según el parámetro
+  if(isContent){
+    console.log(`Entidad cambiada a: ${newInteractionId}`);
+    await applyModificationsToElements(); // Llama a la función global con un argumento vacío
+    console.log(`Se han añadido las modificaciones`);
+  }
+  else{
+    setIsContent(true); // Si no estaba activo, lo activa
+    await applyModificationsToElements();
+  }
+};
+
+export const getContent = async () => {
+  return isContent;
+}
+export const setIsContent = (newState: boolean) => {
+  if (newState === isContent) return; // Si el estado no cambia, no hacer nada
+  else if(!isContent && newState)
+    applyModificationsToElements(); // Si se activa el contenido, aplica las modificaciones
+  isContent = newState;
+  localStorage.setItem("isContent", JSON.stringify(newState));
 };
 
 const applyNoteToElement = (data: infoModifNota) => {
@@ -519,12 +558,14 @@ export const openCollaborativeSocket = (interactionId: number) => {
 
   console.log(`Abriendo WebSocket para la interacción: ${interactionId}`);
 
-  const wsUrl = `ws://localhost:8000/ws/interaccion/${interactionId}/`;
+  const wsUrl = `wss://backjosetfg.com/ws/interaccion/${interactionId}/`;
 
   socket = new WebSocket(wsUrl);
 
   socket.onopen = () => {
     console.log('WebSocket conectado');
+    if(!isContent)
+      setIsContent(true); // Si no estaba activo, lo activa
   };
 
   socket.onmessage = (event) => {
@@ -562,9 +603,10 @@ export const openCollaborativeSocket = (interactionId: number) => {
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isSidebarVisible, setIsSidebarVisible] = useState(
-    () => JSON.parse(localStorage.getItem("isSidebarVisible") || "true") // Leer el estado inicial desde Local Storage
-  );
+  const [isSidebarVisible, setIsSidebarVisible] = useState(() => {
+    const savedState = localStorage.getItem("isSidebarVisible");
+    return savedState !== null ? JSON.parse(savedState) : false; // Inicializar desde Local Storage
+  });
   let lastSelectedText = "";
 
   const handleLogin = () => {
@@ -572,8 +614,8 @@ const App = () => {
   };
 
   // Función para alternar la visibilidad de la sidebar
-  const toggleSidebar = () => {
-    const newVisibility = !isSidebarVisible;
+  const toggleSidebar = (visibiliti: boolean) => {
+    const newVisibility = visibiliti;
     setIsSidebarVisible(newVisibility);
     localStorage.setItem("isSidebarVisible", JSON.stringify(newVisibility)); // Guardar el estado en Local Storage
   };
@@ -654,7 +696,6 @@ const App = () => {
     underlineChanged: boolean,
     inicio: number,
     fin: number,
-    textoOriginal: string,
     textoModificado: string
   ): Promise<{ id: number }> => {
     try {
@@ -744,7 +785,6 @@ const App = () => {
           underlineChanged, 
           inicio,
           fin,
-          textoOriginal,
           textoModificado
         );
 
@@ -1023,8 +1063,9 @@ const App = () => {
 
   // Detectar selección de texto y mostrar el menú
   document.addEventListener("mouseup", (event) => {
+    if(canWrite === false) return; // Si no se puede escribir, no hacer nada
     const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
+    if (selection && selection.rangeCount > 0 && isContent) {
       const range = selection.getRangeAt(0);
       const selectedText = range.toString().trim();
 
@@ -1036,10 +1077,54 @@ const App = () => {
       }
     }
   });
+  
+  useEffect(() => {
+    const handleRightClickOutside = (event: MouseEvent) => {
+      if (
+        isSidebarVisible &&
+        event.target instanceof HTMLElement &&
+        !event.target.closest("#tfg-sidebar-root")
+      ) {
+        toggleSidebar(false); // Ocultar el sidebar si se hace clic fuera de él
+        event.preventDefault();
+      }
+    };
+  
+    document.addEventListener("contextmenu", handleRightClickOutside);
+  
+    return () => {
+      document.removeEventListener("contextmenu", handleRightClickOutside);
+    };
+  }, [isSidebarVisible]);
+
+
+  const handleMessage = (message: { action: string }): void => {
+    if (message.action === "open_sidebar") {
+      toggleSidebar(true); // Mostrar el sidebar cuando se reciba el mensaje
+    }
+    else if (message.action === "activate") {
+      setIsContent(true); // Activar el contenido
+      window.location.reload();
+    }
+    else if (message.action === "deactivate") {
+      setIsContent(false); // Desactivar el contenido
+      window.location.reload(); // Recargar la página para eliminar modificaciones
+    }
+    console.log(isContent);
+  };
 
   useEffect(() => {
-    applyModificationsToElements();
+    chrome.runtime.onMessage.addListener(handleMessage);
+
+    return () => {
+      chrome.runtime.onMessage.removeListener(handleMessage);
+    };
   }, []);
+
+  useEffect(() => {
+    if(isContent)
+      applyModificationsToElements(); // Aplicar modificaciones al contenido al cargar la página
+  }, []);  
 
   return (
     <>
@@ -1051,70 +1136,23 @@ const App = () => {
             position: "fixed",
             top: "0",
             right: "0",
-            width: "300px",
+            width: "500px", // Ancho fijo del sidebar
             height: "100vh",
             zIndex: "9999",
             backgroundColor: "white",
             boxShadow: "-2px 0 5px rgba(0,0,0,0.1)",
+            display: "flex",
+            flexDirection: "column", // Asegura que los elementos internos estén apilados
           }}
         >
           <Sidebar isLoggedIn={isLoggedIn} onLogin={handleLogin} />
         </div>
       )}
-
-      {/* Botón para mostrar/ocultar la sidebar */}
-      <button
-        onClick={toggleSidebar}
-        style={{
-          position: "fixed",
-          bottom: "20px",
-          right: "20px",
-          zIndex: "10000",
-          backgroundColor: isSidebarVisible ? "red" : "green",
-          color: "white",
-          border: "none",
-          borderRadius: "50%",
-          width: "50px",
-          height: "50px",
-          cursor: "pointer",
-          fontSize: "16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          opacity: "0.5", // Botón más transparente por defecto
-          transition: "opacity 0.3s ease", // Suavizar la transición
-        }}
-        title={isSidebarVisible ? "Ocultar Sidebar" : "Mostrar Sidebar"}
-        onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")} // Opacidad completa al pasar el ratón
-        onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.5")} // Volver a ser transparente al quitar el ratón
-      >
-        {isSidebarVisible ? "X" : "☰"}
-      </button>
     </>
   );
 };
-
-// Crear un contenedor para el sidebar
-// const container = document.createElement("div");
-// container.id = "tfg-sidebar-root";
-// container.style.position = "fixed";
-// container.style.top = "0";
-// container.style.right = "0";
-// container.style.width = "300px";
-// container.style.height = "100vh";
-// container.style.zIndex = "9999";
-// container.style.backgroundColor = "white";
-// container.style.boxShadow = "-2px 0 5px rgba(0,0,0,0.1)";
-// document.body.appendChild(container);
-
-// // Renderizar el componente React (sidebar)
-// const root = createRoot(container);
-// root.render(<App />);
-
-// Renderizar el componente React (sidebar)
 const container = document.createElement("div");
-container.id = "root";
+container.id = "tfg-sidebar-root";
 document.body.appendChild(container);
 
 const root = createRoot(container);

@@ -44,11 +44,13 @@ class ObtenerEntidadInteraccionesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, url, format=None):
-        
-        interacciones = Interaccion.objects.filter(entidad__url=url)
-        serializer = InfoInteraccionSerializer(interacciones, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
+        try:
+            interacciones = Interaccion.objects.filter(entidad__url=url, privado=False)
+            serializer = InfoInteraccionSerializer(interacciones, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Interaccion.DoesNotExist:
+            print("No se encontraron interacciones para esta entidad.")
+            return Response({"error": "No se encontraron interacciones para esta entidad."}, status=status.HTTP_404_NOT_FOUND)
 
 class ObtenerInteraccionView(APIView):
     permission_classes = [IsAuthenticated]
@@ -224,8 +226,8 @@ class VerInteraccionView(APIView):
             return Response({"error": "Interacción no encontrada."}, status=status.HTTP_404_NOT_FOUND)
 
         if not interaccion.privado or \
-           interaccion.usuarios_visualizan.filter(id=request.user.id).exists() or \
-           InteraccionCompartida.objects.filter(interaccion=interaccion, compartido_con=request.user).exists():
+        interaccion.usuarios_visualizan.filter(id=request.user.id).exists() or \
+        interaccion.usuarios_realizan.filter(id=request.user.id).exists():
             serializer = InteraccionSerializer(interaccion)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -499,3 +501,25 @@ class UnsubscribeView(APIView):
         interaccion.save()
 
         return Response({"msg": "Te has desubscrito correctamente"}, status=status.HTTP_200_OK)
+    
+class CambiarVisibilidadInteraccionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, id, format=None):
+        try:
+            # Obtener la interacción por ID
+            interaccion = Interaccion.objects.get(id=id)
+        except Interaccion.DoesNotExist:
+            return Response({"error": "Interacción no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Alternar la visibilidad de la interacción
+        interaccion.privado = not interaccion.privado
+        interaccion.save()
+
+        return Response(
+            {
+                "message": "Visibilidad actualizada correctamente.",
+                "nueva_visibilidad": interaccion.privado,
+            },
+            status=status.HTTP_200_OK,
+        )

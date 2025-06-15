@@ -3,7 +3,7 @@
   "name": "Mi Extensión Web",
   "version": "1.0",
   "description": "Extensión de ejemplo con React",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
   "background": {
     "service_worker": "background.js"
   },

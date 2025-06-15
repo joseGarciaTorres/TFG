@@ -34,8 +34,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const logout = () => {
-    setAccessToken(null)
-    chrome.storage.local.remove(['access', 'refresh'])
+    setAccessToken(null);
+    chrome.storage.local.remove(['access', 'refresh']);
+    window.location.reload();
   }
 
   return (

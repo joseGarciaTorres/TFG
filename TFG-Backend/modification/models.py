@@ -33,7 +33,6 @@ class ModificacionTexto(ModificacionBase):
     def __str__(self):
         return f"Texto desde {self.inicio} hasta {self.fin}"
 
-# Las siguientes son placeholders para cuando tengas Anotacion o Elemento
 class ModificacionAnotacion(ModificacionBase):
     contenido = models.TextField(blank=True, null=True)
     modificacionTextoId = models.ForeignKey(
