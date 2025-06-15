@@ -114,19 +114,18 @@
   
   .interaction-admin-role-button {
     padding: 0.5rem 1rem;
-    border-radius: 4px;
     font-weight: bold;
     transition: background-color 0.2s ease;
   }
   
   .interaction-admin-role-visualizar {
-    background-color: var(--primary-blue);
+    background-color: #218380;
     color: white;
   }
   
   .interaction-admin-role-editar {
-    background-color: var(--primary-blue-light);
-    color: var(--primary-blue-dark);
+    background-color:  #D97C7F;
+    color: black;
   }
   
   .interaction-admin-share-button {

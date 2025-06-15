@@ -65,13 +65,13 @@
   /* Usuario del comentario */
   .comment-user {
     font-weight: bold;
-    color: var(--primary-blue-dark);
+    color: black;
   }
   
   /* Fecha del comentario */
   .comment-date {
     font-size: 0.875rem;
-    color: var(--text-gray);
+    color: black;
     margin-top: 0.25rem;
   }
   
@@ -115,12 +115,11 @@
   
   /* Botón para publicar */
   .forum-submit-button {
-    background-color: var(--primary-blue);
+    background-color: #FFB703;
     color: white;
     padding: 0.5rem 1rem;
     border-radius: 9999px;
     font-weight: bold;
-    margin-top: 0.5rem;
     transition: transform 0.2s ease, background-color 0.2s ease;
   }
   

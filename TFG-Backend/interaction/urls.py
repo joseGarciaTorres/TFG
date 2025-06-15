@@ -19,12 +19,15 @@ from .views import (
     UnsubscribeView,
     ObtenerInteraccionView,
     ObtenerEntidadInteraccionesView,
+    CambiarVisibilidadInteraccionView,
 )
 
 urlpatterns = [
     path('entidad/', CrearEntidadView.as_view(), name='crear_entidad'),
     path('entidad/<path:url>/', ObtenerEntidadView.as_view(), name='obtener_entidad'),
-    path('entidad/<path:url>/interacciones', ObtenerEntidadInteraccionesView.as_view(), name='obtener_entidad_interacciones'),
+    path('entidad/<path:url>/interacciones/', ObtenerEntidadInteraccionesView.as_view(), name='obtener_entidad_interacciones'),
+    path('<path:url>/interacciones/', ObtenerEntidadInteraccionesView.as_view(), name='obtener_entidad_interacciones'),
+    
     path('crear/', CrearInteraccionView.as_view(), name='crear_interaccion'),
     path('obtener/<path:url>', ObtenerInteraccionView.as_view(), name='crear_interaccion'),
     path('compartir/', CompartirInteraccionView.as_view(), name='compartir_interaccion'),
@@ -41,4 +44,5 @@ urlpatterns = [
     path('elemento/crear/', CrearElementoView.as_view(), name='crear_elemento'),
     path('elemento/seleccionar/', SeleccionarElementoView.as_view(), name='seleccionar_elemento'),
     path('elemento/desbloquear/', DesbloquearElementoView.as_view(), name='desbloquear_elemento'),
+    path('<int:id>/cambiar-visibilidad/', CambiarVisibilidadInteraccionView.as_view(), name='cambiar_visibilidad_interaccion'),
 ]

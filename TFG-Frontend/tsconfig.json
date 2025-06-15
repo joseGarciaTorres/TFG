@@ -5,6 +5,7 @@
     { "path": "./tsconfig.node.json" },
   ],
   "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
     "target": "es5",
     "esModuleInterop": true,
     "jsx": "react-jsx",

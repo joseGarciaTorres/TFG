@@ -1,36 +1,98 @@
 /* Variables de colores */
 :root {
-  --primary-blue: #3b82f6;
-  --primary-blue-dark: #2563eb;
-  --primary-blue-light: #93c5fd;
-  --danger-red: #ef4444;
-  --danger-red-dark: #b91c1c;
+  --primary-red: #FFB703; /* Color de los botones */
+  --primary-red-dark: #E07A00; /* Color más oscuro y saturado al pasar el cursor */
+  --label-color: #29C8F0; /* Color de las etiquetas */
   --light-gray: #f9fafb;
-  --text-gray: #6b7280;
+  --text-gray: #E2F6FF; /* Color del texto */
 }
 
 /* Contenedor principal */
 .main-screen-container {
-  flex: 1; /* Ocupa el espacio disponible */
-  overflow-y: auto;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Sombra similar al login/registro */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  scrollbar-width: thin; /* Hace la barra de desplazamiento más delgada en Firefox */
+  scrollbar-color: rgba(0, 0, 0, 0.2) var(--label-color); /* Color de la barra y el fondo en Firefox */
+  background-color: transparent;
+
+  /* Tipografía y espaciado */
+  font-size: var(--font-size-medium, 1rem); /* Tamaño de fuente similar */
+  line-height: var(--line-height-content, 1.625); /* Altura de línea */
+  font-family: "Font Awesome 6 Regular", Arial, sans-serif; /* Fuente similar */
 }
+
+.main-screen-container::-webkit-scrollbar {
+  width: 8px; /* Ancho de la barra de desplazamiento */
+}
+
+.main-screen-container::-webkit-scrollbar-track {
+  background-color: var(--label-color); /* Color del fondo de la barra */
+  border-radius: 10px; /* Bordes redondeados */
+}
+
+.main-screen-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2); /* Color de la barra de desplazamiento */
+  border-radius: 10px; /* Bordes redondeados */
+}
+
 
 /* Perfil del usuario */
 .profile-section {
-  background-color: white;
+  background-color: var(--label-color);
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1rem;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px; /* Ancho máximo similar al login/registro */
+}
+
+.interaction-item {
+  background-color: var(--text-gray);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px; /* Ancho máximo similar al login/registro */
 }
 
 /* Sección de búsqueda */
 .search-section {
-  background-color: white;
+  background-color: var(--label-color);
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1rem;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px; /* Ancho máximo similar al login/registro */
+  overflow-y: auto; /* Permite el desplazamiento vertical */
+  scrollbar-width: thin; /* Hace la barra de desplazamiento más delgada en Firefox */
+  scrollbar-color: rgba(0, 0, 0, 0.2) var(--label-color);
+  word-wrap: break-word; /* Permite que las palabras largas se ajusten al ancho */
+  overflow-wrap: break-word; /* Compatibilidad adicional para navegadores modernos */
+  white-space: normal; 
+}
+
+.search-section::-webkit-scrollbar {
+  width: 8px; /* Ancho de la barra de desplazamiento */
+}
+
+.search-section::-webkit-scrollbar-track {
+  background-color: var(--label-color); /* Color del fondo de la barra */
+  border-radius: 10px; /* Bordes redondeados */
+}
+
+.search-section::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2); /* Color de la barra de desplazamiento */
+  border-radius: 10px; /* Bordes redondeados */
 }
 
 .search-bar {
@@ -39,9 +101,14 @@
   margin-bottom: 1rem;
 }
 
+label {
+  display: block;
+  margin-bottom: 10px; /* Espaciado entre las etiquetas */
+}
+
 .search-select,
 .search-input {
-  border: 1px solid var(--primary-blue-light);
+  border: 1px solid var(--label-color);
   border-radius: 4px;
   padding: 0.5rem;
   font-size: 1rem;
@@ -50,24 +117,57 @@
 
 .search-input:focus {
   outline: none;
-  box-shadow: 0px 0px 0px 3px var(--primary-blue-light);
+  box-shadow: 0px 0px 0px 3px var(--label-color);
 }
 
 .search-button {
-  background-color: var(--primary-blue);
+  background-color: var(--primary-red);
   color: white;
   padding: 0.5rem 1rem;
-  border-radius: 4px;
+  border-radius: 5px;
   font-weight: bold;
   transition: background-color 0.2s ease, transform 0.2s ease;
+  border: none;
+}
+
+.cancel-button {
+  background-color: #8F2D56;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  border: none;
+}
+
+.cancel-button:hover {
+  background-color: #6B1F40; /* Color más oscuro y saturado para el efecto hover */
+  transform: scale(1.05); /* Aumenta ligeramente el tamaño del botón */
+}
+
+.back-button {
+  background-color: #023047;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  border: none;
+}
+
+.back-button:hover {
+  background-color: #012132; /* Color más oscuro y saturado para el efecto hover */
+  transform: scale(1.05); /* Aumenta ligeramente el tamaño del botón */
 }
 
 .search-button:hover {
-  background-color: var(--primary-blue-dark);
+  background-color: var(--primary-red-dark);
   transform: scale(1.05);
 }
 
+/* Resultados de búsqueda */
 .search-results {
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -84,26 +184,29 @@
 }
 
 .result-button {
-  background-color: var(--primary-blue);
+  background-color: var(--primary-red);
   color: white;
   padding: 0.5rem 1rem;
-  border-radius: 4px;
+  border-radius: 5px;
   font-weight: bold;
   transition: background-color 0.2s ease, transform 0.2s ease;
+  border: none;
 }
 
 .result-button:hover {
-  background-color: var(--primary-blue-dark);
+  background-color: var(--primary-red-dark);
   transform: scale(1.05);
 }
 
 /* Solicitudes recibidas */
 .requests-section {
-  background-color: white;
+  background-color: var(--label-color);
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1rem;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px; /* Ancho máximo similar al login/registro */
 }
 
 .request-item {
@@ -119,25 +222,29 @@
 
 .accept-button,
 .reject-button {
-  background-color: var(--primary-blue);
   color: white;
   padding: 0.5rem 1rem;
-  border-radius: 4px;
+  border-radius: 5px;
   font-weight: bold;
   transition: background-color 0.2s ease, transform 0.2s ease;
+  border: none;
+}
+
+.accept-button {
+  background-color: var(--primary-red);
 }
 
 .accept-button:hover {
-  background-color: var(--primary-blue-dark);
+  background-color: var(--primary-red-dark);
   transform: scale(1.05);
 }
 
 .reject-button {
-  background-color: var(--danger-red);
+  background-color: var(--primary-red-dark);
 }
 
 .reject-button:hover {
-  background-color: var(--danger-red-dark);
+  background-color: var(--primary-red-dark);
   transform: scale(1.05);
 }
 
@@ -146,4 +253,84 @@
   text-align: center;
   color: var(--text-gray);
   font-size: 1rem;
+}
+
+.interacciones-container {
+  margin-top: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  min-height: 200px; /* Altura mínima para evitar que el contenedor se encoja */
+  max-height: calc(100vh - 150px); /* Altura máxima dinámica */
+  width: 100%; /* Ocupa todo el ancho disponible */
+  max-width: 100%; /* Asegura que no exceda el ancho del contenedor padre */
+  box-sizing: border-box; /* Incluye el padding y el borde en el tamaño total */
+  overflow-y: auto; /* Habilitar scroll vertical */
+  overflow-x: auto; /* Habilitar scroll horizontal si es necesario */
+}
+
+.interacciones-scroll {
+  flex-grow: 1; /* Permite que el área de scroll crezca dentro del contenedor */
+  overflow-y: auto; /* Habilitar scroll vertical */
+  overflow-x: auto; /* Habilitar scroll horizontal */
+}
+
+.interaction-item {
+  background-color: white;
+  border-bottom: 1px solid #ddd;
+  padding: 10px 0;
+  word-wrap: break-word; /* Permite que las palabras largas se ajusten al ancho */
+}
+
+.interaction-item:last-child {
+  border-bottom: none; /* Eliminar el borde inferior del último elemento */
+}
+
+.inline-block-p {
+  margin: 2px; /* Espacio externo entre el texto y otros elementos */
+  padding: 10px; /* Espacio interno entre el texto y el borde del contenedor */
+
+}
+
+.interaccion-foro-button {
+  margin-top: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.interaccion-foro-button:hover {
+  background-color: #0056b3;
+}
+
+
+.main-section {
+  width: 100%;
+  max-width: 500px; /* Ancho máximo similar al login/registro */
+  overflow-y: auto; /* Permite el desplazamiento vertical */
+  scrollbar-width: thin; /* Hace la barra de desplazamiento más delgada en Firefox */
+  scrollbar-color: rgba(0, 0, 0, 0.2) var(--label-color);
+}
+
+.main-section::-webkit-scrollbar {
+  width: 8px; /* Ancho de la barra de desplazamiento */
+}
+
+.main-section::-webkit-scrollbar-track {
+  background-color: var(--label-color); /* Color del fondo de la barra */
+  border-radius: 10px; /* Bordes redondeados */
+}
+
+.main-section::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2); /* Color de la barra de desplazamiento */
+  border-radius: 10px; /* Bordes redondeados */
+}
+
+.main-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }

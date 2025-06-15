@@ -60,6 +60,7 @@ interface infoModif{
 }
 
 export let entidadId: number | null = null;
+let canWrite: boolean = true; // Variable para indicar si el usuario es el propietario de la interacción
 let interaccionId: number | null = null;
 let elementoId: number | null = null;
 let socket: WebSocket | null = null;
@@ -491,17 +492,36 @@ const applyModificationsToElements = async (data?: infoModif) => {
   }
 };
 
+const removeModificationsFromDOM = () => {
+  // Selecciona todos los elementos <span> con el atributo "data-modification-id"
+  const elements = document.querySelectorAll('span[data-modification-id]');
+
+  // Recorre los elementos y reemplaza cada <span> por su contenido de texto
+  elements.forEach((element) => {
+    const parent = element.parentNode;
+    while (element.firstChild) {
+      parent?.insertBefore(element.firstChild, element); // Mueve los hijos del <span> al padre
+    }
+    parent?.removeChild(element); // Elimina el <span>
+  });
+
+  console.log(`Se han eliminado ${elements.length} modificaciones del DOM.`);
+};
 
 // Función para cambiar el `entidadId` y recargar modificaciones
-export const setEntidadIdAndReload = async (newInteractionId: number) => {
+export const setEntidadIdAndReload = async (newInteractionId: number, wr: boolean) => {
   interaccionId = newInteractionId;
+  removeModificationsFromDOM();
+  canWrite = wr; // Actualiza el estado de escritura según el parámetro
   if(isContent){
     console.log(`Entidad cambiada a: ${newInteractionId}`);
     await applyModificationsToElements(); // Llama a la función global con un argumento vacío
     console.log(`Se han añadido las modificaciones`);
   }
-  else
+  else{
     setIsContent(true); // Si no estaba activo, lo activa
+    await applyModificationsToElements();
+  }
 };
 
 export const getContent = async () => {
@@ -1043,6 +1063,7 @@ const App = () => {
 
   // Detectar selección de texto y mostrar el menú
   document.addEventListener("mouseup", (event) => {
+    if(canWrite === false) return; // Si no se puede escribir, no hacer nada
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0 && isContent) {
       const range = selection.getRangeAt(0);
@@ -1083,6 +1104,7 @@ const App = () => {
     }
     else if (message.action === "activate") {
       setIsContent(true); // Activar el contenido
+      window.location.reload();
     }
     else if (message.action === "deactivate") {
       setIsContent(false); // Desactivar el contenido
@@ -1114,11 +1136,13 @@ const App = () => {
             position: "fixed",
             top: "0",
             right: "0",
-            width: "500px",
+            width: "500px", // Ancho fijo del sidebar
             height: "100vh",
             zIndex: "9999",
             backgroundColor: "white",
             boxShadow: "-2px 0 5px rgba(0,0,0,0.1)",
+            display: "flex",
+            flexDirection: "column", // Asegura que los elementos internos estén apilados
           }}
         >
           <Sidebar isLoggedIn={isLoggedIn} onLogin={handleLogin} />

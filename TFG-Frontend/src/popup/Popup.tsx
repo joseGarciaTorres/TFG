@@ -1,6 +1,7 @@
 import React, { use, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { getContent } from '../content/content';
+import '../styles/main.css';
 
 const Popup = () => {
   const [isExtensionActive, setIsExtensionActive] = useState(false); // Estado para el switch on/off
@@ -36,37 +37,40 @@ const Popup = () => {
   };
 
   return (
-    <div style={{ padding: '20px', textAlign: 'center' }}>
-      <h1>Extensión</h1>
+    <>
       <button
-        onClick={handleOpenSidebar}
-        style={{
-          padding: '10px 20px',
-          backgroundColor: '#4CAF50',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-          marginBottom: '10px',
-        }}
-      >
-        Abrir Sidebar
-      </button>
-      <br />
-      <button
-        onClick={toggleExtension}
-        style={{
-          padding: '10px 20px',
-          backgroundColor: isExtensionActive ? '#FF5722' : '#2196F3',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-        }}
-      >
-        {isExtensionActive ? 'Desactivar' : 'Activar'}
-      </button>
-    </div>
+    onClick={handleOpenSidebar}
+    className='back-button'
+    style={{
+      width: '100px',
+      height: '50px',
+      display: 'inline-block',
+      textAlign: 'center',
+      lineHeight: '10px',
+      margin: '10px',
+      borderRadius: '10px',
+    }}
+  >
+    Abrir Panel
+  </button>
+  <br />
+  <button
+    onClick={toggleExtension}
+    className='search-button'
+    style={{
+      width: '100px',
+      height: '50px',
+      display: 'inline-block',
+      textAlign: 'center',
+      lineHeight: '10px',
+      margin: '10px',
+      borderRadius: '10px',
+    }}
+  >
+    Activar
+    Desactivar
+  </button>
+  </>
   );
 };
 

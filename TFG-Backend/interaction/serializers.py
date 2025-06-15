@@ -19,6 +19,8 @@ class ElementoSerializer(serializers.ModelSerializer):
 
 
 class InteraccionSerializer(serializers.ModelSerializer):
+    owner_name = serializers.CharField(source='owner.name', read_only=True)  # Agrega el campo owner_name
+
     class Meta:
         model = Interaccion
         fields = '__all__'
@@ -27,7 +29,8 @@ class InteraccionSerializer(serializers.ModelSerializer):
 
 class InfoInteraccionSerializer(serializers.ModelSerializer):
     entidad = serializers.CharField(source='entidad.url', read_only=True)
-    #owner = serializers.CharField(source='owner.name', read_only=True)
+    owner_name = serializers.CharField(source='owner.name', read_only=True)  # Agrega el campo owner_name
+
 
     class Meta:
         model = Interaccion
@@ -37,6 +40,8 @@ class InfoInteraccionSerializer(serializers.ModelSerializer):
 class InteraccionCompartidaSerializer(serializers.ModelSerializer):
     interaccion = serializers.PrimaryKeyRelatedField(queryset=Interaccion.objects.all())
     creador = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    owner_name = serializers.CharField(source='owner.name', read_only=True)  # Agrega el campo owner_name
+
 
     class Meta:
         model = InteraccionCompartida
@@ -52,9 +57,11 @@ class InteraccionPublicaSerializer(serializers.ModelSerializer):
         read_only=True,
         slug_field='name'
     )
+    owner_name = serializers.CharField(source='owner.name', read_only=True)  # Agrega el campo owner_name
+
 
     class Meta:
         model = Interaccion
-        fields = ['id', 'entidad', 'owner', 'usuarios_visualizan']
+        fields = ['id', 'entidad', 'owner', 'usuarios_visualizan', 'owner_name']
 
 
