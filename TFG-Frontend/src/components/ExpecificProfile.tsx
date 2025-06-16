@@ -49,6 +49,16 @@ const ExpecificProfile: React.FC<ExpecificProfileProps> = ({ userId, onClose }) 
     fetchUserProfile();
   }, [userId]);
 
+  const handleUnirse = async (interactionId: number) => {
+    try {
+      await axios.post("/interaction/unirse/", { interaccion: interactionId });
+      alert("Te has unido como visualizador correctamente.");
+      // Actualizar los resultados después de unirse
+    } catch (err) {
+      alert("No se pudo completar la acción. Inténtalo de nuevo.");
+    }
+  };
+
   // Si se está viendo un foro, mostrar la pantalla del foro
   if (viewingForumId !== null) {
     return (
@@ -114,6 +124,13 @@ const ExpecificProfile: React.FC<ExpecificProfileProps> = ({ userId, onClose }) 
                   Ver Foro
                 </button>
               )}
+                <span style={{ display: "inline-block", width: "10px" }}></span>
+                <button
+                  onClick={() => handleUnirse(interaccion.id)}
+                  className="search-button "
+                >
+                  Unirse
+                </button>
             </div>
           ))}
         </div>

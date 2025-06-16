@@ -523,3 +523,30 @@ class CambiarVisibilidadInteraccionView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+    
+class AnularSuscripcionView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def delete(self, request, interaccion_id, format=None):
+        # Obtener la interacción
+        interaccion = Interaccion.objects.get(id=interaccion_id)
+
+        # Obtener el usuario autenticado
+        usuario = request.user
+
+        # Eliminar al usuario de la lista de visualizadores si está presente
+        if interaccion.usuarios_visualizan.filter(id=usuario.id).exists():
+            interaccion.usuarios_visualizan.remove(usuario)
+            interaccion.numero_usuarios_visualizan = max(0, interaccion.numero_usuarios_visualizan - 1)
+            interaccion.save()
+
+        # Eliminar al usuario de la lista de realizadores si está presente
+        if interaccion.usuarios_realizan.filter(id=usuario.id).exists():
+            interaccion.usuarios_realizan.remove(usuario)
+            interaccion.numero_usuarios_editan = max(0, interaccion.numero_usuarios_editan - 1)
+            interaccion.save()
+
+        # Eliminar al usuario del modelo InteraccionCompartida si está presente
+        InteraccionCompartida.objects.filter(interaccion=interaccion, compartido_con=usuario).delete()
+
+        return Response({"message": "Suscripción anulada correctamente."}, status=status.HTTP_200_OK)
