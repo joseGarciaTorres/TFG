@@ -20,6 +20,7 @@ from .views import (
     ObtenerInteraccionView,
     ObtenerEntidadInteraccionesView,
     CambiarVisibilidadInteraccionView,
+    AnularSuscripcionView,
 )
 
 urlpatterns = [
@@ -33,6 +34,7 @@ urlpatterns = [
     path('compartir/', CompartirInteraccionView.as_view(), name='compartir_interaccion'),
     path('unirse/', UnirseInteraccionPublicaView.as_view(), name='unirse_interaccion'),
     path('<int:interaccion_id>/', VerInteraccionView.as_view(), name='ver_interaccion'),
+    path('<int:interaccion_id>/anulaSuscripcion', AnularSuscripcionView.as_view(), name='ver_interaccion'),
     path('misInteracciones/', MisInteraccionesView.as_view(), name='ver_interaccion_user'),
     path('misInteracciones/<path:url>/', MisInteraccionesUrlView.as_view(), name='ver_interaccion_user_url'),
     path('<int:interaccion_id>/unsubscribe/', UnsubscribeView.as_view(), name='Desubscribirse_de_interaccion'),
