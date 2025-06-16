@@ -65,7 +65,7 @@ const Forum: React.FC<ForumProps> = ({ interactionId, onBack }) => {
       setNewComment(""); // Limpiar el campo de texto
       setReplyTo(null); // Resetear el estado de respuesta
     } catch (err) {
-      alert("No se pudo publicar el comentario. Inténtalo de nuevo.");
+      alert("Unete a la interacción para poder dejar un comentario.");
     }
   };
 

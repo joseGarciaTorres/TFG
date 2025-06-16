@@ -67,6 +67,18 @@ export default function InteractionPanel({ profile, onClose }: InteractionPanelP
     }
   };
 
+  const anularSuscripcion = async (interactionId: number) => {
+    try {
+      await axios.delete(`${interactionId}/anulaSuscripcion`);
+      alert("Te has desuscrito correctamente.");
+      // Aquí puedes agregar lógica adicional, como actualizar el estado o recargar las interacciones
+      fetchInteracciones(); // Vuelve a cargar las interacciones después de desuscribirse
+    } catch (error) {
+      console.error("Error al desuscribirse:", error);
+      alert("Hubo un error al intentar desuscribirte. Por favor, inténtalo de nuevo.");
+    }
+  };
+
 
   const filteredInteracciones = interacciones.filter((interaccion) => {
     if (filter === "owner") {
@@ -170,7 +182,7 @@ return (
               <>
                 <span style={{ display: "inline-block", width: "10px" }}></span>
                 <button
-                  onClick={() => alert("Anular suscripción.")}
+                  onClick={() => anularSuscripcion(interaccion.id)}
                   className="cancel-button"
                 >
                   Anular suscripción
